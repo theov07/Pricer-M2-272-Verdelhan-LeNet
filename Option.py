@@ -1,10 +1,11 @@
-
 class Option:
     def __init__(self, T: float, K: float, opt_type: str = "call", style: str = "european"):
-        self.T = T              # maturité
-        self.K = K              # strike
-        self.type = opt_type    # "call" ou "put"
-        self.style = style      # "european" ou "american"
+        self.T = T                  # maturité
+        self.K = K                  # strike
+        self.type = opt_type        # "call" ou "put"
+        self.style = style          # "european" ou "american"
+
+        # print (f"Option created: {self.type}, style: {self.style}, K={self.K}, T={self.T}")
 
     def payoff(self, S: float) -> float:
         """Calcule le payoff au noeud final"""

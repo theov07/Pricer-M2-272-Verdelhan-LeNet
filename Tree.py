@@ -1,57 +1,58 @@
 import math
-import Node
-
+from Node import Node
+from Option import Option
+import numpy as np
 
 class Tree:
+
     def __init__(self, market, option, N):
-       
-        self.N = N  # Nombre d'étapes dans l'arbre
-        self.deltaT = option.T / N  # Durée de chaque étape
-        self.delta = math.sqrt(3 * self.deltaT)  # Pas de l'arbre
+        self.N = N                                  # Nombre d'étapes dans l'arbre
         self.market = market
         self.option = option
-
     
-    def build_tree(self):
-        """
-        Construit l'arbre trinomial en partant de la racine.
-        """
-        self.root = Node(self.market.S0, 0, self)
 
+    def build_tree(self, factor: float = 1e-10, threshold: float = 1e-10):
+        
+        self.root = Node(self.market.S0, 0, self)
+        self.threshold = threshold                        # Default threshold value for probability checks
+
+        self.deltaT = float(self.option.T) / float(self.N)
+        self.root.cum_prob = 1.0
         trunc = self.root
 
-        for _ in range(self.N, 1):
-            trunc.create_forward_neighbors() 
-            trunc.generate_upper_neighbors()
-            trunc.generate_lower_neighbors()
+        if self.market.ex_div_date is not None:
+            self.dividend_step = math.ceil((self.market.ex_div_date / self.option.T) * self.N) 
+        else:
+            self.dividend_step = None               # No dividend step if ex_div_date is not set
+
+        for _ in range(0, self.N, 1):
+            trunc.create_forward_neighbors()
+            trunc.build_upper_neighbors()
+            trunc.build_lower_neighbors()
             trunc = trunc.forward_mid_neighbor  
 
         self.last_trunc = trunc
         
 
+
     def compute_payoff(self):
-        """
-        Calcule le payoff pour chaque nœud de l'arbre.
-        """
-        trunc = self.last_trunc
-
-        trunc.option_price = trunc.option.payoff(trunc.value)
-
-        while trunc.backward_neighbor is not None:
-            trunc = trunc.backward_neighbor
-            trunc.option_price = trunc.option.payoff(trunc.value)
-            lower = trunc.down_neighbor
-            while lower is not None:
-                lower.option_price = lower.option.payoff(lower.value)
-                lower = lower.down_neighbor
-
-            upper = trunc.up_neighbor
-            while upper is not None:
-                upper.option_price = upper.option.payoff(upper.value)
-                upper = upper.up_neighbor
-
-        return trunc
         
+        last_node = trunc = self.last_trunc
+        trunc.option_price = trunc.tree.option.payoff(last_node.value)
+
+        while last_node.down_neighbor is not None:
+            last_node = last_node.down_neighbor
+            last_node.option_price = last_node.tree.option.payoff(last_node.value)
+
+        last_node = trunc
+
+        while last_node.up_neighbor is not None:
+            last_node = last_node.up_neighbor
+            last_node.option_price = last_node.tree.option.payoff(last_node.value)
+        
+        return trunc
+
+
 
     def backpropagation(self):
         """
@@ -61,16 +62,16 @@ class Tree:
 
         while last_trunc.backward_neighbor is not None:
             last_trunc = last_trunc.backward_neighbor
-            last_trunc.price_option_at_node(self.market.r, self.delta)
+            last_trunc.price_option_at_node(self.market.rate, self.deltaT)
 
             lower = last_trunc.down_neighbor
             while lower is not None:
-                lower.price_option_at_node(self.market.r, self.delta)
+                lower.price_option_at_node(self.market.rate, self.deltaT)
                 lower = lower.down_neighbor
 
             upper = last_trunc.up_neighbor
             while upper is not None:
-                upper.price_option_at_node(self.market.r, self.delta)
+                upper.price_option_at_node(self.market.rate, self.deltaT)
                 upper = upper.up_neighbor
 
 
@@ -81,4 +82,17 @@ class Tree:
         """
         self.compute_payoff()
         self.backpropagation()
+        print(f"calculate_option_price : Option price at root node: {self.root.option_price}")
         return self.root.option_price
+    
+
+    def dividend_value(self, step):
+        """
+        Calcule la valeur du dividende à une étape donnée.
+        """
+        if self.dividend_step == step:
+            print("Dividend step reached")
+            return self.market.dividend
+        return 0.0
+
+        
