@@ -2,7 +2,6 @@ import math
 from Node import Node
 from Option import Option
 import numpy as np
-from datetime import datetime
 
 class Tree:
 
@@ -12,32 +11,20 @@ class Tree:
         self.option = option
     
 
-    def build_tree(self):
+    def build_tree(self, factor: float = 1e-10, threshold: float = 1e-10):
         
-        trunc = self.root = Node(self.market.S0, 0, self)
+        self.root = Node(self.market.S0, 0, self)
+        self.threshold = threshold                        # Default threshold value for probability checks
 
         self.deltaT = float(self.option.T) / float(self.N)
-        
         self.root.cum_prob = 1.0
+        trunc = self.root
 
-        
         if self.market.ex_div_date is not None:
-            # print (self.market.ex_div_date)
-            # print (self.option.T)
-            # print (self.N)
-
-            # self.market.ex_div_date = datetime(2026, 4, 21, 0, 0, 0)
-            # self.option.T = 1.0
-            # self.N = 400
-
-            # normalization_div_date = (self.market.ex_div_date - datetime(2025, 9, 1)).days / 365.0
-            self.dividend_step = math.ceil((self.market.ex_div_date / self.option.T) * self.N)
-            print ('yes')
-        
+            self.dividend_step = math.ceil((self.market.ex_div_date / self.option.T) * self.N) 
         else:
             self.dividend_step = None               # No dividend step if ex_div_date is not set
 
-        
         for _ in range(0, self.N, 1):
             trunc.create_forward_neighbors()
             trunc.build_upper_neighbors()
@@ -95,6 +82,7 @@ class Tree:
         """
         self.compute_payoff()
         self.backpropagation()
+        print(f"calculate_option_price : Option price at root node: {self.root.option_price}")
         return self.root.option_price
     
 
@@ -102,7 +90,6 @@ class Tree:
         """
         Calcule la valeur du dividende à une étape donnée.
         """
-        # print(f"dividend_value called for step {step}")
         if self.dividend_step == step:
             print("Dividend step reached")
             return self.market.dividend

@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+from test import setup_pricer
+
 from Tree import Tree
 from Market import Market
 from Option import Option
-from datetime import datetime
+
 
 def visualize_tree(tree):
     nodes = []
@@ -28,15 +30,16 @@ def visualize_tree(tree):
     plt.grid()
     plt.show()
 
+
+
+
 if __name__ == "__main__":
-    today = datetime(2025, 10, 1)
-    maturity_date = datetime(2026, 10, 1)
-    T = (maturity_date - today).days / 365.0
+    
+    S0, T, k, n, rate, sigma, opt_type, style, ex_div_date = setup_pricer()
 
-    market = Market(S0=100, rate=0.03, sigma=0.2)
-    option = Option(T=T, K=10, opt_type="call", style="european")
+    market = Market(S0=S0, rate=rate, sigma=sigma, ex_div_date=ex_div_date)
+    option = Option(T=T, K=k, opt_type=opt_type, style=style)
+    tree = Tree(market=market, option=option, N=n)
 
-    tree = Tree(market=market, option=option, N=10)
     tree.build_tree()
-
     visualize_tree(tree)

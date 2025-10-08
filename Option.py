@@ -5,8 +5,7 @@ class Option:
         self.type = opt_type        # "call" ou "put"
         self.style = style          # "european" ou "american"
 
-        # print (f"Option created: {self.type}, style: {self.style}, K={self.K}, T={self.T}")
-
+    
     def payoff(self, S: float) -> float:
         """Calcule le payoff au noeud final"""
         if self.type == "call":

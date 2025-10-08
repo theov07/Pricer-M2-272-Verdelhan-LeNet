@@ -28,28 +28,37 @@ class Node:
 
     
     
-   
     def create_forward_neighbors(self):
         """
         Crée les nœuds voisins en avant (up, mid, down) à partir de ce nœud.
         """
-        # Récupération de la valeur de alpha
+        # Récupération de la valeur de deltaT et alpha pour ce step
+
         alpha = self.get_alpha()
 
+
         # Création du Forward Mid
-        mid_value = self.value * math.exp(self.tree.market.rate * self.tree.deltaT) - self.tree.dividend_value(self.step + 1)
-        self.forward_mid_neighbor = Node(mid_value, self.step + 1, self.tree)
+        self.forward_mid_neighbor = Node(
+            self.value * math.exp(self.tree.market.rate * self.tree.deltaT) - self.tree.dividend_value(self.step + 1),
+            self.step + 1, self.tree
+        )
         self.forward_mid_neighbor.backward_neighbor = self
 
-        # Création du Forward Up
-        up_value = self.forward_mid_neighbor.value * alpha
-        self.forward_up_neighbor = Node(up_value, self.step + 1, self.tree)
+       
+       # Création du Forward Up
+        self.forward_up_neighbor = Node(
+            self.forward_mid_neighbor.value * alpha,
+            self.step + 1, self.tree
+        )
         self.forward_mid_neighbor.up_neighbor = self.forward_up_neighbor
         self.forward_up_neighbor.down_neighbor = self.forward_mid_neighbor
-
+        
+        
         # Création du Forward Down
-        down_value = self.forward_mid_neighbor.value / alpha
-        self.forward_down_neighbor = Node(down_value, self.step + 1, self.tree)
+        self.forward_down_neighbor = Node(
+            self.forward_mid_neighbor.value / alpha,
+            self.step + 1, self.tree
+        )
         self.forward_mid_neighbor.down_neighbor = self.forward_down_neighbor
         self.forward_down_neighbor.up_neighbor = self.forward_mid_neighbor
 
@@ -169,61 +178,46 @@ class Node:
 
 
 
+
     def compute_probabilities(self):
         """
         Calcule les probabilités associées aux nœuds voisins en avant.
         """
-        # Récupération de alpha
         alpha = self.get_alpha()
 
-        # Calcul de l'espérance et de la variance
-        esperance = self.value * math.exp(self.tree.market.rate * self.tree.deltaT) - self.tree.dividend_value(self.step + 1)
-        variance = self.value ** 2 * math.exp(2 * self.tree.market.rate * self.tree.deltaT) * (math.exp(self.tree.market.sigma ** 2 * self.tree.deltaT) - 1)
+        esperance = math.exp(self.tree.market.rate * self.tree.deltaT)
+        variance = (math.exp(self.tree.market.sigma ** 2 * self.tree.deltaT) - 1) * math.exp(2 * self.tree.market.rate * self.tree.deltaT)
 
-        # Vérification de l'existence du nœud central
-        if not hasattr(self, "forward_mid_neighbor") or self.forward_mid_neighbor is None:
-            raise ValueError("forward_mid_neighbor est manquant avant calcul des probabilités")
-
-        mid_value = self.forward_mid_neighbor.value
-
-        # Calcul des probabilités pour les voisins
-        p_down = ((mid_value ** -2 * (variance + esperance ** 2) - 1 - (alpha + 1) * (esperance / mid_value - 1))
-                / ((1 - alpha) * (alpha ** -2 - 1)))
-        p_up = (esperance / mid_value - 1 - (1 / alpha - 1) * p_down) / (alpha - 1)
+        p_down = (self.forward_mid_neighbor.value ** (-2) * (variance + esperance ** 2) - 1 - (alpha + 1) * (esperance / self.forward_mid_neighbor.value - 1)) / ((1 - alpha) * (alpha ** (-2) - 1))
+        p_up = (esperance / self.forward_mid_neighbor.value - 1 - (1 / alpha - 1) * p_down) / (alpha - 1)
         p_mid = 1 - p_up - p_down
 
-        # Assignation aux attributs
         self.prob_forward_up_neighbor = p_up
         self.prob_forward_mid_neighbor = p_mid
         self.prob_forward_down_neighbor = p_down
 
-        # Mise à jour des probabilités cumulées
-        if not hasattr(self, "cum_prob"):
-            self.cum_prob = 1.0
+        print(f"Probabilities at step {self.step}: Up={p_up}, Mid={p_mid}, Down={p_down}")
 
-        if getattr(self, "forward_up_neighbor", None) is not None:
+        if self.forward_up_neighbor is not None :
             self.forward_up_neighbor.cum_prob += self.cum_prob * self.prob_forward_up_neighbor
-
-        if getattr(self, "forward_mid_neighbor", None) is not None:
-            self.forward_mid_neighbor.cum_prob += self.cum_prob * self.prob_forward_mid_neighbor
-
-        if getattr(self, "forward_down_neighbor", None) is not None:
-            self.forward_down_neighbor.cum_prob += self.cum_prob * self.prob_forward_down_neighbor
         
+        if self.forward_mid_neighbor is not None :
+            self.forward_mid_neighbor.cum_prob += self.cum_prob * self.prob_forward_mid_neighbor
+        
+        if self.forward_down_neighbor is not None :
+            self.forward_down_neighbor.cum_prob += self.cum_prob * self.prob_forward_down_neighbor
 
 
 
     def compute_price(self):
-        """
-        Calcule et retourne le prix actualisé de l'option à partir des prix des nœuds voisins en avant.
-        """
+
         discount_factor = math.exp(-self.tree.market.rate * self.tree.deltaT)
 
-        price = (
-            self.prob_forward_up_neighbor * self.forward_up_neighbor.option_price
-            + self.prob_forward_mid_neighbor * self.forward_mid_neighbor.option_price
-            + self.prob_forward_down_neighbor * self.forward_down_neighbor.option_price
-        ) * discount_factor
+        price = (self.prob_forward_up_neighbor * self.forward_up_neighbor.option_price +
+                 self.prob_forward_mid_neighbor * self.forward_mid_neighbor.option_price +
+                 self.prob_forward_down_neighbor * self.forward_down_neighbor.option_price) * discount_factor
+        
+        print (f"Price at node with value {self.value} and step {self.step} is {price}")
 
         return price
     
@@ -233,74 +227,56 @@ class Node:
         """
         Calcule le prix de l'option à ce nœud en fonction des prix des nœuds voisins en avant.
         """
-        # Vérification que les nœuds voisins existent
-        if (
-            self.forward_up_neighbor is None
-            or self.forward_mid_neighbor is None
-            or self.forward_down_neighbor is None
-        ):
+        if self.forward_up_neighbor is None or self.forward_mid_neighbor is None or self.forward_down_neighbor is None:
             raise ValueError("Les nœuds voisins en avant doivent être définis pour calculer le prix de l'option.")
 
-        # Facteur d'actualisation
         discount_factor = math.exp(-r * deltaT)
 
-        # Calcul du prix attendu
-        price = (
-            self.prob_forward_up_neighbor * self.forward_up_neighbor.option_price
-            + self.prob_forward_mid_neighbor * self.forward_mid_neighbor.option_price
-            + self.prob_forward_down_neighbor * self.forward_down_neighbor.option_price
-        ) * discount_factor
+        price = (self.prob_forward_up_neighbor * self.forward_up_neighbor.option_price +
+                 self.prob_forward_mid_neighbor * self.forward_mid_neighbor.option_price +
+                 self.prob_forward_down_neighbor * self.forward_down_neighbor.option_price) * discount_factor
 
-        # Si option américaine, comparer avec la valeur d’exercice immédiat
+        # Pour les options américaines, on compare avec le payoff immédiat
         if self.tree.option.style == "american":
             immediate_exercise_value = self.tree.option.payoff(self.value)
             price = max(price, immediate_exercise_value)
 
-        # Enregistrement du prix de l’option dans ce nœud
         self.option_price = price
 
+        print(f"Option price at node with value {self.value} and step {self.step} is {self.option_price}")
 
 
 
     
     def compute_cum_prob(self):
-        """
-        Calcule et propage la probabilité cumulée depuis le nœud racine jusqu’aux nœuds suivants.
-        """
         if self.backward_neighbor is None:
-            # Le nœud racine a une probabilité cumulée de 1
             self.cum_prob = 1.0
         else:
-            # Calcul de la probabilité cumulée en fonction du lien avec le nœud précédent
             if self is self.backward_neighbor.forward_up_neighbor:
-                self.cum_prob = (
-                    self.backward_neighbor.cum_prob * self.backward_neighbor.prob_forward_up_neighbor
-                )
+                self.cum_prob = self.backward_neighbor.cum_prob * self.backward_neighbor.prob_forward_up_neighbor
             elif self is self.backward_neighbor.forward_mid_neighbor:
-                self.cum_prob = (
-                    self.backward_neighbor.cum_prob * self.backward_neighbor.prob_forward_mid_neighbor
-                )
+                self.cum_prob = self.backward_neighbor.cum_prob * self.backward_neighbor.prob_forward_mid_neighbor
             elif self is self.backward_neighbor.forward_down_neighbor:
-                self.cum_prob = (
-                    self.backward_neighbor.cum_prob * self.backward_neighbor.prob_forward_down_neighbor
-                )
+                self.cum_prob = self.backward_neighbor.cum_prob * self.backward_neighbor.prob_forward_down_neighbor
             else:
                 raise ValueError("Le nœud courant n'est pas un voisin valide du nœud arrière.")
 
-        # Propagation récursive de la probabilité cumulée
+        # Propagation
         if self.up_neighbor is not None:
             self.up_neighbor.compute_cum_prob()
         if self.down_neighbor is not None:
             self.down_neighbor.compute_cum_prob()
 
-    
+        print(f"Cumulative probability at node with value {self.value} and step {self.step} is {self.cum_prob}")
+
     
     def get_alpha(self):
         """
-        Calcule et retourne le coefficient alpha pour ce nœud, en fonction de la volatilité du marché et du pas de temps deltaT.
+        Retourne les valeurs de deltaT et alpha pour ce nœud.
         """
         if self.tree.deltaT is None:
             raise ValueError("deltaT n'est pas défini dans l'arbre.")
 
         alpha = math.exp(self.tree.market.sigma * math.sqrt(3 * self.tree.deltaT))
+        print(f"deltaT = {self.tree.deltaT}, alpha = {alpha}")
         return alpha
