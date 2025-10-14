@@ -2,6 +2,7 @@ import math
 from Node import Node
 from Option import Option
 import numpy as np
+from datetime import datetime
 
 class Tree:
 
@@ -11,20 +12,24 @@ class Tree:
         self.option = option
     
 
-    def build_tree(self, factor: float = 1e-10, threshold: float = 1e-10):
+    def build_tree(self, threshold=0):
         
-        self.root = Node(self.market.S0, 0, self)
-        self.threshold = threshold                        # Default threshold value for probability checks
+        trunc = self.root = Node(self.market.S0, 0, self)
 
         self.deltaT = float(self.option.T) / float(self.N)
+        
         self.root.cum_prob = 1.0
-        trunc = self.root
+        self.threshold = threshold
 
+        
         if self.market.ex_div_date is not None:
-            self.dividend_step = math.ceil((self.market.ex_div_date / self.option.T) * self.N) 
+            normalization_div_date = (self.market.ex_div_date - datetime.today()).days / 365
+            self.dividend_step = math.ceil((normalization_div_date / self.option.T) * self.N)
+        
         else:
             self.dividend_step = None               # No dividend step if ex_div_date is not set
 
+        
         for _ in range(0, self.N, 1):
             trunc.create_forward_neighbors()
             trunc.build_upper_neighbors()
@@ -62,16 +67,16 @@ class Tree:
 
         while last_trunc.backward_neighbor is not None:
             last_trunc = last_trunc.backward_neighbor
-            last_trunc.price_option_at_node(self.market.rate, self.deltaT)
+            last_trunc.calculate_option_price(self.market.rate, self.deltaT)
 
             lower = last_trunc.down_neighbor
             while lower is not None:
-                lower.price_option_at_node(self.market.rate, self.deltaT)
+                lower.calculate_option_price(self.market.rate, self.deltaT)
                 lower = lower.down_neighbor
 
             upper = last_trunc.up_neighbor
             while upper is not None:
-                upper.price_option_at_node(self.market.rate, self.deltaT)
+                upper.calculate_option_price(self.market.rate, self.deltaT)
                 upper = upper.up_neighbor
 
 
@@ -82,7 +87,6 @@ class Tree:
         """
         self.compute_payoff()
         self.backpropagation()
-        print(f"calculate_option_price : Option price at root node: {self.root.option_price}")
         return self.root.option_price
     
 
@@ -90,9 +94,34 @@ class Tree:
         """
         Calcule la valeur du dividende à une étape donnée.
         """
+        # print(f"dividend_value called for step {step}")
         if self.dividend_step == step:
-            print("Dividend step reached")
+            # print("Dividend step reached")
             return self.market.dividend
         return 0.0
 
-        
+    
+
+    def get_option_price(self, threshold=0):
+        """
+        Retourne le prix de l'option à ce nœud.
+        """
+        self.build_tree(threshold=threshold)
+        print(f"yo: {self.calculate_option_price}")
+        return self.calculate_option_price()
+    
+
+    def get_node_count(self):
+        """
+        Retourne le nombre total de nœuds dans l'arbre.
+        """
+        count = 0
+        node = self.root
+        while node is not None:
+            count += 1
+            down_node = node.down_neighbor
+            while down_node is not None:
+                count += 1
+                down_node = down_node.down_neighbor
+            node = node.forward_mid_neighbor
+        return count

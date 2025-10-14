@@ -1,4 +1,5 @@
 from datetime import datetime
+
 class Market:
     def __init__(self, S0: float, rate: float, sigma: float, dividend: float = 0.0, ex_div_date: datetime = None):
         

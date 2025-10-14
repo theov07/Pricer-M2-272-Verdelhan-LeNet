@@ -1,0 +1,465 @@
+// Variables globales
+let currentData = null;
+let svg, g;
+
+// Configuration D3.js
+const width = 1000;
+const height = 600;
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    initializeToggleButtons();
+    initializeForm();
+    initializeD3();
+});
+
+function initializeToggleButtons() {
+    // Gestion des boutons toggle pour le type d'option
+    document.querySelectorAll('[data-option]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-option]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    // Gestion des boutons toggle pour le style d'option
+    document.querySelectorAll('[data-style]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-style]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+}
+
+function initializeForm() {
+    document.getElementById('pricing-form').addEventListener('submit', handleFormSubmit);
+}
+
+function initializeD3() {
+    const container = document.querySelector('.tree-area');
+    if (!container) return;
+
+    // Créer le SVG
+    svg = d3.select("#tree-svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("viewBox", `0 0 ${width} ${height}`);
+
+    // Ajouter le groupe principal avec zoom
+    g = svg.append("g");
+
+    // Configuration du zoom
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 3])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    // Récupérer les valeurs du formulaire
+    const formData = {
+        S0: parseFloat(document.getElementById('S0').value),
+        K: parseFloat(document.getElementById('K').value),
+        T: parseFloat(document.getElementById('T').value),
+        r: parseFloat(document.getElementById('r').value),
+        sigma: parseFloat(document.getElementById('sigma').value),
+        N: parseInt(document.getElementById('N').value),
+        option_type: document.querySelector('[data-option].active').dataset.option,
+        option_style: document.querySelector('[data-style].active').dataset.style
+    };
+
+    try {
+        // Envoyer la requête à l'API
+        const response = await fetch('/api/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            currentData = result.data;
+            console.log("Données reçues:", result.data);
+            console.log("Nombre de noeuds:", result.data.nodes.length);
+            console.log("Nombre de liens:", result.data.edges.length);
+            
+            showNewCalculationResult(result.data, formData);
+            
+            // Toujours afficher la visualisation, adapter selon N
+            console.log("Affichage de la visualisation pour N =", formData.N);
+            showVisualization();
+            drawTree(result.data);
+        } else {
+            showResult(`❌ Erreur: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        showResult(`❌ Erreur de communication: ${error.message}`, 'error');
+    }
+}
+
+function showResult(message, type) {
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = message;
+    resultDiv.className = `result ${type}`;
+    resultDiv.style.display = 'block';
+}
+
+function showNewCalculationResult(data, params) {
+    // Cacher l'ancien système
+    document.getElementById('result').style.display = 'none';
+    
+    // Afficher la nouvelle section
+    document.getElementById('results-section').style.display = 'block';
+    
+    const trinomialPrice = data.tree_params.final_price;
+    const blackScholesPrice = data.black_scholes_price;
+    const difference = trinomialPrice - blackScholesPrice;
+    const percentDiff = (difference / blackScholesPrice * 100);
+    
+    // Option type info
+    const optionInfo = data.option_info || { type: 'call', style: 'european' };
+    
+    // Section principale - Comparaison des prix
+    document.getElementById('main-results').innerHTML = `
+        <h3>💰 Résultats du Pricing</h3>
+        
+        <div class="price-comparison">
+            <div class="price-box trinomial">
+                <h4>🌳 Modèle Trinomial</h4>
+                <div class="price-value">${trinomialPrice.toFixed(4)}€</div>
+                <div class="price-info">${data.nodes.length} nœuds calculés</div>
+            </div>
+            <div class="price-box blackscholes">
+                <h4>📈 Black-Scholes</h4>
+                <div class="price-value">${blackScholesPrice.toFixed(4)}€</div>
+                <div class="price-info">Prix théorique exact</div>
+            </div>
+        </div>
+        
+        <div class="difference-section">
+            <h4>📊 Différence</h4>
+            <p style="font-size: 1.2rem; text-align: center; margin: 1rem 0;">
+                ${difference > 0 ? '+' : ''}${difference.toFixed(4)}€ 
+                (${percentDiff > 0 ? '+' : ''}${percentDiff.toFixed(2)}%)
+            </p>
+        </div>
+    `;
+    
+    // Section détaillée
+    document.getElementById('detailed-results').innerHTML = `
+        <h4>🔍 Détails des paramètres</h4>
+        <div class="details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div class="detail-item">
+                <div class="detail-label">Type d'option</div>
+                <div class="detail-value">${optionInfo.type.toUpperCase()} ${optionInfo.style}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Prix spot (S₀)</div>
+                <div class="detail-value">${params.S0}€</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Strike (K)</div>
+                <div class="detail-value">${params.K}€</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Maturité (T)</div>
+                <div class="detail-value">${params.T} an${params.T > 1 ? 's' : ''}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Taux sans risque (r)</div>
+                <div class="detail-value">${(params.r * 100).toFixed(1)}%</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Volatilité (σ)</div>
+                <div class="detail-value">${(params.sigma * 100).toFixed(1)}%</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Étapes (N)</div>
+                <div class="detail-value">${params.N}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Nœuds calculés</div>
+                <div class="detail-value">${data.nodes.length}</div>
+            </div>
+        </div>
+    `;
+}
+
+function showVisualization() {
+    document.getElementById('visualization').style.display = 'block';
+}
+
+function hideVisualization() {
+    document.getElementById('visualization').style.display = 'none';
+}
+
+function drawTree(data) {
+    console.log("DrawTree appelé avec:", data);
+    console.log("Noeuds à dessiner:", data.nodes.length);
+    console.log("Liens à dessiner:", data.edges.length);
+    
+    // Nettoyer le SVG
+    g.selectAll("*").remove();
+    
+    const container = document.querySelector('.tree-area');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    // Paramètres adaptatifs selon N pour gérer jusqu'à N=400+
+    const N = data.tree_params.N;
+    let adaptiveScale, showVisualization = true;
+    
+    if (N <= 10) {
+        adaptiveScale = 1.0;           // Taille normale
+    } else if (N <= 50) {
+        adaptiveScale = Math.max(0.4, 10 / N);  // Réduit progressivement
+    } else if (N <= 200) {
+        adaptiveScale = 0.2;           // Très petit
+        showVisualization = data.nodes.length < 5000; // Limite par nombre de nœuds
+    } else {
+        adaptiveScale = 0.1;           // Minimal
+        showVisualization = data.nodes.length < 2000; // Limite stricte
+    }
+    
+    console.log(`N=${N}, nœuds=${data.nodes.length}, échelle=${adaptiveScale}, affichage=${showVisualization}`);
+    
+    // Si trop de nœuds, afficher un message informatif au lieu de la visualisation
+    if (!showVisualization) {
+        g.selectAll("*").remove();
+        g.append("text")
+            .attr("x", width/2)
+            .attr("y", height/2)
+            .attr("text-anchor", "middle")
+            .style("font-family", "'Segoe UI', sans-serif")
+            .style("font-size", "16px")
+            .style("fill", "#ffffff")
+            .text(`Arbre trop volumineux pour la visualisation (${data.nodes.length} nœuds)`);
+        
+        g.append("text")
+            .attr("x", width/2)
+            .attr("y", height/2 + 30)
+            .attr("text-anchor", "middle")
+            .style("font-family", "'Segoe UI', sans-serif")
+            .style("font-size", "14px")
+            .style("fill", "#cccccc")
+            .text(`Les calculs sont corrects, seule la visualisation est simplifiée`);
+        return;
+    }
+    
+    // Organiser les nœuds par étapes
+    const nodesByStep = {};
+    data.nodes.forEach(node => {
+        if (!nodesByStep[node.step]) {
+            nodesByStep[node.step] = [];
+        }
+        nodesByStep[node.step].push(node);
+    });
+    
+    // Calculer les positions avec adaptation
+    const stepWidth = width / (N + 1);
+    const maxNodesInStep = Math.max(...Object.values(nodesByStep).map(nodes => nodes.length));
+    const stepHeight = Math.max(20, height / (maxNodesInStep + 1)); // Hauteur min de 20px
+    
+    const positions = {};
+    Object.keys(nodesByStep).forEach(step => {
+        const stepNodes = nodesByStep[step];
+        stepNodes.forEach((node, index) => {
+            // Centrer les nœuds de chaque étape verticalement
+            const stepNodeCount = stepNodes.length;
+            const startY = (height - (stepNodeCount - 1) * stepHeight) / 2;
+            
+            positions[node.id] = {
+                x: parseInt(step) * stepWidth + 50,
+                y: startY + index * stepHeight
+            };
+        });
+    });
+    
+    console.log("Positions calculées:", positions);
+    
+    // Dessiner les liens en premier
+    const links = g.selectAll(".link")
+        .data(data.edges)
+        .enter().append("line")
+        .attr("class", d => `link ${d.direction}`)
+        .attr("x1", d => positions[d.source]?.x || 0)
+        .attr("y1", d => positions[d.source]?.y || 0)
+        .attr("x2", d => positions[d.target]?.x || 0)
+        .attr("y2", d => positions[d.target]?.y || 0)
+        .style("stroke", d => {
+            switch(d.direction) {
+                case 'up': return '#66ff66';     // Vert plus clair
+                case 'middle': return '#66ccff'; // Bleu plus clair  
+                case 'down': return '#ff6666';   // Rouge plus clair
+                default: return '#ffffff';
+            }
+        })
+        .style("stroke-width", "2px")
+        .style("opacity", "0.9");
+    
+    // Ajouter les étiquettes de probabilité sur les liens - adaptatifs
+    const labelFontSize = Math.max(5, 9 * adaptiveScale); // Taille entre 5 et 9px
+    const linkLabels = g.selectAll(".link-label")
+        .data(data.edges)
+        .enter().append("text")
+        .attr("class", "link-label")
+        .attr("x", d => (positions[d.source]?.x + positions[d.target]?.x) / 2 || 0)
+        .attr("y", d => (positions[d.source]?.y + positions[d.target]?.y) / 2 || 0)
+        .attr("dy", "-5px")
+        .style("text-anchor", "middle")
+        .style("font-family", "'Segoe UI', sans-serif")
+        .style("font-size", labelFontSize + "px")
+        .style("font-weight", "600")
+        .style("fill", d => {
+            switch(d.direction) {
+                case 'up': return '#66ff66';
+                case 'middle': return '#66ccff';
+                case 'down': return '#ff6666';
+                default: return '#ffffff';
+            }
+        })
+        .style("pointer-events", "none")
+        .style("background", "rgba(0,0,0,0.7)")
+        .text(d => {
+            if (!d.probability) return '';
+            // Adaptation selon N pour éviter la surcharge visuelle
+            if (N > 50) return '';   // Pas de labels pour N > 50 (performance)
+            if (N > 20) return '';   // Pas de labels pour N > 20 (trop dense)
+            if (N > 10) return d.probability.toFixed(2);
+            return d.probability.toFixed(3);
+        });
+    
+    // Dessiner les nœuds
+    const nodes = g.selectAll(".node")
+        .data(data.nodes)
+        .enter().append("g")
+        .attr("class", d => {
+            let classes = "node";
+            if (d.step === 0) classes += " root";
+            if (d.step === data.tree_params.N) classes += " leaf";
+            return classes;
+        })
+        .attr("transform", d => `translate(${positions[d.id]?.x || 0},${positions[d.id]?.y || 0})`);
+    
+    // Cercles des nœuds - taille adaptative
+    const nodeRadius = Math.max(6, 15 * adaptiveScale); // Rayon entre 6 et 15
+    nodes.append("circle")
+        .attr("r", nodeRadius)
+        .style("fill", d => {
+            if (d.step === 0) return '#66ff66';      // Vert clair pour le nœud initial
+            if (d.step === data.tree_params.N) return '#ff6666'; // Rouge clair pour les nœuds finaux
+            return '#66ccff';                        // Bleu clair pour les nœuds intermédiaires
+        })
+        .style("stroke", "#ffffff")
+        .style("stroke-width", Math.max(1, 2 * adaptiveScale) + "px")
+        .style("cursor", "pointer");
+    
+    // Texte principal des nœuds (prix de l'action) - taille adaptative
+    const fontSize = Math.max(6, 10 * adaptiveScale); // Taille entre 6 et 10px
+    nodes.append("text")
+        .attr("dy", "-0.3em")
+        .style("text-anchor", "middle")
+        .style("font-family", "'Segoe UI', sans-serif")
+        .style("font-size", fontSize + "px")
+        .style("font-weight", "600")
+        .style("fill", "#000000")
+        .style("pointer-events", "none")
+        .text(d => {
+            if (N > 50) return ''; // Pas de texte principal pour N > 50
+            return N > 10 ? d.value.toFixed(0) : d.value.toFixed(1);
+        });
+    
+    // Texte secondaire (prix de l'option) - adaptatif selon N
+    if (N <= 30) { // Seulement afficher le texte secondaire pour N <= 30
+        const secondaryFontSize = Math.max(5, 8 * adaptiveScale); // Taille entre 5 et 8px
+        nodes.append("text")
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .style("font-family", "'Segoe UI', sans-serif")
+            .style("font-size", secondaryFontSize + "px")
+            .style("font-weight", "500")
+            .style("fill", "#000000")
+            .style("pointer-events", "none")
+            .text(d => N > 15 ? `(${d.option_value.toFixed(1)})` : `(${d.option_value.toFixed(3)})`);
+    }
+    
+    // Tooltips au survol
+    nodes
+        .on("mouseover", function(event, d) {
+            // Supprimer les anciens tooltips
+            d3.selectAll(".tooltip").remove();
+            
+            // Créer le tooltip
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("position", "absolute")
+                .style("background", "rgba(0,0,0,0.9)")
+                .style("color", "white")
+                .style("padding", "10px")
+                .style("border-radius", "6px")
+                .style("font-size", "12px")
+                .style("font-family", "'Segoe UI', sans-serif")
+                .style("box-shadow", "0 4px 12px rgba(0,0,0,0.3)")
+                .style("pointer-events", "none")
+                .style("z-index", "1000")
+                .style("max-width", "200px")
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY - 10) + "px");
+            
+            // Contenu du tooltip
+            let tooltipContent = `
+                <div style="font-weight: bold; margin-bottom: 5px; color: #4fc3f7;">Étape ${d.step}</div>
+                <div><strong>Prix action:</strong> ${d.value.toFixed(4)}€</div>
+                <div><strong>Prix option:</strong> ${d.option_value.toFixed(4)}€</div>
+                <div><strong>Payoff:</strong> ${d.payoff.toFixed(4)}€</div>
+            `;
+            
+            // Ajouter les probabilités si disponibles
+            if (d.prob_up !== undefined) {
+                tooltipContent += `
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #333;">
+                        <div style="font-weight: bold; color: #4caf50; margin-bottom: 3px;">Probabilités:</div>
+                        <div style="font-size: 10px;">
+                            <div>↗ Up: ${(d.prob_up * 100).toFixed(1)}%</div>
+                            <div>→ Mid: ${(d.prob_mid * 100).toFixed(1)}%</div>
+                            <div>↘ Down: ${(d.prob_down * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            tooltip.html(tooltipContent);
+        })
+        .on("mouseout", function() {
+            d3.selectAll(".tooltip").remove();
+        });
+    
+    // Auto-zoom pour voir tout l'arbre
+    const bounds = g.node().getBBox();
+    const parent = svg.node().getBoundingClientRect();
+    const fullWidth = parent.width;
+    const fullHeight = parent.height;
+    const widthScale = fullWidth / bounds.width;
+    const heightScale = fullHeight / bounds.height;
+    const scale = Math.min(widthScale, heightScale) * 0.8;
+    
+    const translate = [
+        fullWidth / 2 - scale * (bounds.x + bounds.width / 2),
+        fullHeight / 2 - scale * (bounds.y + bounds.height / 2)
+    ];
+    
+    svg.transition()
+        .duration(750)
+        .call(
+            d3.zoom().transform,
+            d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+        );
+}

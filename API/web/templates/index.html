@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricer Trinomial Pro - Dauphine M2</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🌳 Pricer Trinomial Pro</h1>
+            <p>Évaluation d'options par modèle trinomial - Dauphine M2 - VERDELHAN - LE NET</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Section de configuration -->
+            <section class="config-section">
+                <div class="card">
+                    <h2>📊 Configuration de l'option</h2>
+                    <form id="pricing-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="S0">Prix spot (S₀) €</label>
+                                <input type="number" id="S0" step="0.01" value="100" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="K">Strike (K) €</label>
+                                <input type="number" id="K" step="0.01" value="100" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="T">Maturité (T) années</label>
+                                <input type="number" id="T" step="0.01" value="1" min="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="r">Taux sans risque (r)</label>
+                                <input type="number" id="r" step="0.001" value="0.05" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sigma">Volatilité (σ)</label>
+                                <input type="number" id="sigma" step="0.001" value="0.2" min="0.001" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="N">Étapes (N)</label>
+                                <input type="number" id="N" value="5" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="option-toggles">
+                            <div class="toggle-group">
+                                <label>Type d'option</label>
+                                <div class="toggle-buttons">
+                                    <button type="button" class="toggle-btn active" data-option="call">Call</button>
+                                    <button type="button" class="toggle-btn" data-option="put">Put</button>
+                                </div>
+                            </div>
+                            
+                            <div class="toggle-group">
+                                <label>Style d'option</label>
+                                <div class="toggle-buttons">
+                                    <button type="button" class="toggle-btn active" data-style="european">Européenne</button>
+                                    <button type="button" class="toggle-btn" data-style="american">Américaine</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="calculate-btn">🚀 Calculer le prix</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Section de résultats -->
+            <section id="results-section" class="results-section" style="display: none;">
+                <div class="card">
+                    <div id="main-results"></div>
+                    <div id="detailed-results"></div>
+                </div>
+            </section>
+
+            <!-- Section de visualisation -->
+            <section id="visualization" class="visualization-section" style="display: none;">
+                <div class="card">
+                    <h3>🌲 Visualisation de l'arbre trinomial</h3>
+                    <div class="tree-container">
+                        <div class="tree-controls">
+                            <p class="tree-info">Utilisez la molette pour zoomer et glissez pour naviguer</p>
+                        </div>
+                        <div class="tree-area">
+                            <svg id="tree-svg"></svg>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ancien système de résultats (compatible) -->
+            <div id="result" class="result" style="display: none;"></div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
