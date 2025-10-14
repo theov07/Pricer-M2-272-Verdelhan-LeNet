@@ -70,7 +70,9 @@ async function handleFormSubmit(event) {
         sigma: parseFloat(document.getElementById('sigma').value),
         N: parseInt(document.getElementById('N').value),
         option_type: document.querySelector('[data-option].active').dataset.option,
-        option_style: document.querySelector('[data-style].active').dataset.style
+        option_style: document.querySelector('[data-style].active').dataset.style,
+        dividend: parseFloat(document.getElementById('dividend').value) || 0,
+        ex_div_date: document.getElementById('ex_div_date').value || null
     };
 
     try {
@@ -145,7 +147,7 @@ function showNewCalculationResult(data, params) {
         </div>
         
         <div class="difference-section">
-            <h4>📊 Différence</h4>
+            <center><h4>📊 Différence</h4></center>
             <p style="font-size: 1.2rem; text-align: center; margin: 1rem 0;">
                 ${difference > 0 ? '+' : ''}${difference.toFixed(4)}€ 
                 (${percentDiff > 0 ? '+' : ''}${percentDiff.toFixed(2)}%)
@@ -189,6 +191,18 @@ function showNewCalculationResult(data, params) {
                 <div class="detail-label">Nœuds calculés</div>
                 <div class="detail-value">${data.nodes.length}</div>
             </div>
+            ${params.dividend > 0 ? `
+            <div class="detail-item">
+                <div class="detail-label">Dividende</div>
+                <div class="detail-value">${params.dividend}€</div>
+            </div>
+            ` : ''}
+            ${params.ex_div_date ? `
+            <div class="detail-item">
+                <div class="detail-label">Date ex-dividende</div>
+                <div class="detail-value">${new Date(params.ex_div_date).toLocaleDateString('fr-FR')}</div>
+            </div>
+            ` : ''}
         </div>
     `;
 }

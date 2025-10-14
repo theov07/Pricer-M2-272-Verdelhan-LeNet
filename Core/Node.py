@@ -40,8 +40,13 @@ class Node:
         # Récupération de alpha
         alpha = self.get_alpha()
 
-        # Calcul de l'espérance et de la variance
-        esperance = self.value * math.exp(self.tree.market.rate * self.tree.deltaT) - self.tree.dividend_value(self.step + 1)
+        # Calcul de l'espérance - forward price avec gestion correcte du dividende
+        forward_value = self.value * math.exp(self.tree.market.rate * self.tree.deltaT)
+        if self.tree.dividend_step == (self.step + 1):
+            esperance = forward_value - self.tree.market.dividend
+        else:
+            esperance = forward_value
+            
         variance = self.value ** 2 * math.exp(2 * self.tree.market.rate * self.tree.deltaT) * (math.exp(self.tree.market.sigma ** 2 * self.tree.deltaT) - 1)
 
         # Vérification de l'existence du nœud central

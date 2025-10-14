@@ -12,10 +12,10 @@ class TreeVisualizer:
     def __init__(self):
         pass
     
-    def create_tree_data(self, S0, K, T, r, sigma, N, option_type='call', option_style='european'):
-        print(f"Creation arbre: S0={S0}, K={K}, T={T}, r={r}, sigma={sigma}, N={N}")
+    def create_tree_data(self, S0, K, T, r, sigma, N, option_type='call', option_style='european', dividend=0.0, ex_div_date=None):
+        print(f"Creation arbre: S0={S0}, K={K}, T={T}, r={r}, sigma={sigma}, N={N}, dividend={dividend}, ex_div_date={ex_div_date}")
         
-        market = Market(S0=S0, rate=r, sigma=sigma)
+        market = Market(S0=S0, rate=r, sigma=sigma, dividend=dividend, ex_div_date=ex_div_date)
         
         if option_type.lower() == 'call':
             option = Option(T=T, K=K, opt_type='call', style=option_style)

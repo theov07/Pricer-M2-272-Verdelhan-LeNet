@@ -170,9 +170,8 @@ class Tree:
         """
         Calcule la valeur du dividende à une étape donnée.
         """
-        # print(f"dividend_value called for step {step}")
+
         if self.dividend_step == step:
-            # print("Dividend step reached")
             return self.market.dividend
         return 0.0
 
@@ -183,7 +182,6 @@ class Tree:
         Retourne le prix de l'option à ce nœud.
         """
         self.build_tree(threshold=threshold)
-        # print(f"yo: {self.calculate_option_price}")
         return self.calculate_option_price()
     
 

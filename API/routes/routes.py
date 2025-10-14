@@ -3,7 +3,7 @@ import sys
 import os
 from API.visualization.tree_visualizer import TreeVisualizer
 from Core.BlackScholes import BlackScholes
-
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 api_bp = Blueprint('api', __name__)
@@ -17,7 +17,7 @@ def api_calculate():
         
         # Validation des paramètres
         required_params = ['S0', 'K', 'T', 'r', 'sigma', 'N']
-        optional_params = ['option_type', 'option_style']
+        optional_params = ['option_type', 'option_style', 'dividend', 'ex_div_date']
         
         for param in required_params:
             if param not in params:
@@ -29,12 +29,22 @@ def api_calculate():
         # Paramètres optionnels avec valeurs par défaut
         option_type = params.get('option_type', 'call')
         option_style = params.get('option_style', 'european')
+        dividend = params.get('dividend', 0.0)
+        ex_div_date = params.get('ex_div_date', None)
         
         # Validation des valeurs optionnelles
         if option_type not in ['call', 'put']:
             option_type = 'call'
         if option_style not in ['european', 'american']:
             option_style = 'european'
+        
+        # Conversion de la date ex-dividende
+        ex_div_date_obj = None
+        if ex_div_date:
+            try:
+                ex_div_date_obj = datetime.strptime(ex_div_date, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Format de date invalide. Utilisez YYYY-MM-DD'}), 400
         
         # Validation des valeurs
         if params['T'] <= 0:
@@ -60,7 +70,9 @@ def api_calculate():
             sigma=params['sigma'],
             N=params['N'],
             option_type=option_type,
-            option_style=option_style
+            option_style=option_style,
+            dividend=dividend,
+            ex_div_date=ex_div_date_obj
         )
         
         # Calcul Black-Scholes pour comparaison
