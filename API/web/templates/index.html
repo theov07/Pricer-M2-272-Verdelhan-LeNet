@@ -30,8 +30,12 @@
                                 <input type="number" id="K" step="0.01" value="100" required>
                             </div>
                             <div class="form-group">
-                                <label for="T">Maturité (T) années</label>
-                                <input type="number" id="T" step="0.01" value="1" min="0.01" required>
+                                <label for="start_date">Date de début</label>
+                                <input type="date" id="start_date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="maturity_date">Date de maturité</label>
+                                <input type="date" id="maturity_date" required>
                             </div>
                             <div class="form-group">
                                 <label for="r">Taux sans risque (r)</label>
@@ -79,9 +83,11 @@
             </section>
 
             <!-- Section de résultats -->
-            <section id="results-section" class="results-section" style="display: none;">
+            <section id="results-section" style="display: none;">
                 <div class="card">
                     <div id="main-results"></div>
+                </div>
+                <div class="card">
                     <div id="detailed-results"></div>
                 </div>
             </section>
@@ -89,20 +95,15 @@
             <!-- Section de visualisation -->
             <section id="visualization" class="visualization-section" style="display: none;">
                 <div class="card">
-                    <h3>🌲 Visualisation de l'arbre trinomial</h3>
-                    <div class="tree-container">
-                        <div class="tree-controls">
-                            <p class="tree-info">Utilisez la molette pour zoomer et glissez pour naviguer</p>
-                        </div>
-                        <div class="tree-area">
-                            <svg id="tree-svg"></svg>
-                        </div>
+                    <h2>🌳 Visualisation de l'arbre trinomial</h2>
+                    <div class="tree-area">
+                        <svg id="tree-svg"></svg>
                     </div>
                 </div>
             </section>
 
-            <!-- Ancien système de résultats (compatible) -->
-            <div id="result" class="result" style="display: none;"></div>
+            <!-- Ancien système de résultats (caché par défaut) -->
+            <div id="result" style="display: none;"></div>
         </main>
     </div>
 

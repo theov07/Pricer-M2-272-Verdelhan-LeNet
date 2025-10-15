@@ -184,6 +184,73 @@ body {
     height: 100%;
 }
 
+/* Maturity mode toggle */
+.maturity-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: #ffffff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+    color: #000000;
+    border-color: transparent;
+}
+
+.mode-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.maturity-section {
+    transition: all 0.3s ease;
+}
+
+/* Date info display */
+.date-info {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.date-info h4 {
+    color: #4caf50;
+    margin-bottom: 0.5rem;
+}
+
+.date-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.date-info-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+.date-info-label {
+    color: #b0b0b0;
+}
+
+.date-info-value {
+    color: #ffffff;
+    font-weight: 500;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .form-grid {

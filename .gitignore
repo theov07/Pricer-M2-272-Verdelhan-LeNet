@@ -1,8 +1,16 @@
+# Fichiers temporaires et de développement
 bin.py
+
+# Documentation PDF
 Dauphine-M2_VBA+Python_2025-26_Trinomial-tree_v2.pdf
+
+# Dossiers de développement
 Autre/
-API/__pycache__
-API/routes/__pycache__/routes.cpython-311.pyc
-API/routes/__pycache__/routes.cpython-311.pyc
-API/visualization/__pycache__/tree_visualizer.cpython-311.pyc
-Core/__pycache__/Option.cpython-311.pyc
+
+# Python cache et bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+

@@ -1,9 +1,33 @@
+from datetime import datetime
+
 class Option:
-    def __init__(self, T: float, K: float, opt_type: str = "call", style: str = "european"):
-        self.T = T                  # maturité
-        self.K = K                  # strike
-        self.type = opt_type        # "call" ou "put"
-        self.style = style          # "european" ou "american"
+    def __init__(self, K: float, opt_type: str = "call", style: str = "european", 
+                 T: float = None, start_date: str = None, maturity_date: str = None):
+        """
+        Initialise une option avec soit T directement, soit des dates pour calculer T
+        
+        Args:
+            K: Strike price
+            opt_type: "call" ou "put"
+            style: "european" ou "american"
+            T: Maturité en années (optionnel si dates fournies)
+            start_date: Date de début au format YYYY-MM-DD
+            maturity_date: Date de maturité au format YYYY-MM-DD
+        """
+        self.K = K
+        self.type = opt_type
+        self.style = style
+        
+        # Calcul de T selon les paramètres fournis
+        if T is not None:
+            self.T = T
+        elif start_date is not None and maturity_date is not None:
+            # Convertir les dates et calculer T
+            start = datetime.strptime(start_date, '%Y-%m-%d')
+            maturity = datetime.strptime(maturity_date, '%Y-%m-%d')
+            self.T = (maturity - start).days / 365.0
+        else:
+            raise ValueError("Soit T, soit start_date et maturity_date doivent être fournis")
 
     
     def payoff(self, S: float) -> float:

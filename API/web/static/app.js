@@ -29,6 +29,19 @@ function initializeToggleButtons() {
             btn.classList.add('active');
         });
     });
+    
+    // Initialiser les dates par défaut
+    initializeDefaultDates();
+}
+
+function initializeDefaultDates() {
+    // Définir des dates par défaut
+    const today = new Date();
+    const maturityDate = new Date();
+    maturityDate.setFullYear(today.getFullYear() + 1); // +1 an par défaut
+    
+    document.getElementById('start_date').value = today.toISOString().split('T')[0];
+    document.getElementById('maturity_date').value = maturityDate.toISOString().split('T')[0];
 }
 
 function initializeForm() {
@@ -61,11 +74,12 @@ function initializeD3() {
 async function handleFormSubmit(event) {
     event.preventDefault();
     
-    // Récupérer les valeurs du formulaire
+    // Récupérer les valeurs du formulaire avec dates obligatoires
     const formData = {
         S0: parseFloat(document.getElementById('S0').value),
         K: parseFloat(document.getElementById('K').value),
-        T: parseFloat(document.getElementById('T').value),
+        start_date: document.getElementById('start_date').value,
+        maturity_date: document.getElementById('maturity_date').value,
         r: parseFloat(document.getElementById('r').value),
         sigma: parseFloat(document.getElementById('sigma').value),
         N: parseInt(document.getElementById('N').value),
@@ -156,6 +170,41 @@ function showNewCalculationResult(data, params) {
     `;
     
     // Section détaillée
+    const dateInfo = data.date_info || {};
+    let maturityDisplay = '';
+    
+    if (dateInfo.calculated_from_dates) {
+        maturityDisplay = `
+            <div class="detail-item">
+                <div class="detail-label">Date de début</div>
+                <div class="detail-value">${new Date(dateInfo.start_date).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Date de maturité</div>
+                <div class="detail-value">${new Date(dateInfo.maturity_date).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Maturité calculée</div>
+                <div class="detail-value">${dateInfo.T_years.toFixed(4)} ans (${dateInfo.T_days} jours)</div>
+            </div>
+        `;
+    } else {
+        maturityDisplay = `
+                        <div class="detail-item">
+                <div class="detail-label">Date de début</div>
+                <div class="detail-value">${new Date(params.start_date).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Date de maturité</div>
+                <div class="detail-value">${new Date(params.maturity_date).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Maturité calculée</div>
+                <div class="detail-value">${data.date_info ? data.date_info.T_years.toFixed(4) : 'N/A'} ans (${data.date_info ? data.date_info.T_days : 'N/A'} jours)</div>
+            </div>
+        `;
+    }
+    
     document.getElementById('detailed-results').innerHTML = `
         <h4>🔍 Détails des paramètres</h4>
         <div class="details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
@@ -171,10 +220,7 @@ function showNewCalculationResult(data, params) {
                 <div class="detail-label">Strike (K)</div>
                 <div class="detail-value">${params.K}€</div>
             </div>
-            <div class="detail-item">
-                <div class="detail-label">Maturité (T)</div>
-                <div class="detail-value">${params.T} an${params.T > 1 ? 's' : ''}</div>
-            </div>
+            ${maturityDisplay}
             <div class="detail-item">
                 <div class="detail-label">Taux sans risque (r)</div>
                 <div class="detail-value">${(params.r * 100).toFixed(1)}%</div>
@@ -204,6 +250,26 @@ function showNewCalculationResult(data, params) {
             </div>
             ` : ''}
         </div>
+        
+        ${dateInfo.calculated_from_dates ? `
+        <div class="date-info">
+            <h4>📅 Informations sur les dates</h4>
+            <div class="date-info-grid">
+                <div class="date-info-item">
+                    <span class="date-info-label">Période:</span>
+                    <span class="date-info-value">${dateInfo.T_days} jours</span>
+                </div>
+                <div class="date-info-item">
+                    <span class="date-info-label">Années:</span>
+                    <span class="date-info-value">${dateInfo.T_years.toFixed(6)}</span>
+                </div>
+                <div class="date-info-item">
+                    <span class="date-info-label">Calcul automatique:</span>
+                    <span class="date-info-value">✅ Activé</span>
+                </div>
+            </div>
+        </div>
+        ` : ''}
     `;
 }
 
