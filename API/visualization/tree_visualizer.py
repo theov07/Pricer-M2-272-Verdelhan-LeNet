@@ -33,12 +33,17 @@ class TreeVisualizer:
                 step_nodes = tree.nodes_by_step[step]
                 
                 for node in step_nodes:
+                    # Pour les nœuds finaux, option_price = payoff
+                    # Pour les nœuds intermédiaires, option_price = prix calculé par rétropropagation
+                    is_final_node = (step == N)
+                    payoff_value = node.option_price if is_final_node else option.payoff(node.value)
+                    
                     node_data = {
                         'id': node.get_id(),
                         'step': step,
                         'value': node.value,
                         'option_value': node.option_price,
-                        'payoff': getattr(node, 'payoff', 0)
+                        'payoff': payoff_value
                     }
                     
                     # Ajouter les probabilités si disponibles
