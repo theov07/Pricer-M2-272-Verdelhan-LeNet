@@ -74,6 +74,12 @@ function initializeD3() {
 async function handleFormSubmit(event) {
     event.preventDefault();
     
+    // Indicateur de chargement
+    const calculateBtn = document.querySelector('.calculate-btn');
+    const originalText = calculateBtn.innerHTML;
+    calculateBtn.innerHTML = '<span class="loading-spinner">⏳</span> Calcul en cours...';
+    calculateBtn.disabled = true;
+    
     // Récupérer les valeurs du formulaire avec dates obligatoires
     const formData = {
         S0: parseFloat(document.getElementById('S0').value),
@@ -90,6 +96,8 @@ async function handleFormSubmit(event) {
     };
 
     try {
+        console.log("📤 Envoi de la requête API...");
+        
         // Envoyer la requête à l'API
         const response = await fetch('/api/calculate', {
             method: 'POST',
@@ -103,21 +111,27 @@ async function handleFormSubmit(event) {
         
         if (result.success) {
             currentData = result.data;
-            console.log("Données reçues:", result.data);
-            console.log("Nombre de noeuds:", result.data.nodes.length);
-            console.log("Nombre de liens:", result.data.edges.length);
+            console.log("✅ Données reçues:", result.data);
+            console.log("📊 Nombre de noeuds:", result.data.nodes.length);
+            console.log("🔗 Nombre de liens:", result.data.edges.length);
             
+            // Nettoyer et afficher les résultats
             showNewCalculationResult(result.data, formData);
             
-            // Toujours afficher la visualisation, adapter selon N
-            console.log("Affichage de la visualisation pour N =", formData.N);
-            showVisualization();
+            // Rafraîchir complètement la visualisation
+            console.log("🔄 Rafraîchissement de la visualisation pour N =", formData.N);
+            refreshVisualization();
             drawTree(result.data);
         } else {
             showResult(`❌ Erreur: ${result.error}`, 'error');
         }
     } catch (error) {
+        console.error("❌ Erreur de communication:", error);
         showResult(`❌ Erreur de communication: ${error.message}`, 'error');
+    } finally {
+        // Restaurer le bouton
+        calculateBtn.innerHTML = originalText;
+        calculateBtn.disabled = false;
     }
 }
 
@@ -150,12 +164,12 @@ function showNewCalculationResult(data, params) {
         <div class="price-comparison">
             <div class="price-box trinomial">
                 <h4>🌳 Modèle Trinomial</h4>
-                <div class="price-value">${trinomialPrice.toFixed(4)}€</div>
+                <div class="price-value">${trinomialPrice.toFixed(6)}€</div>
                 <div class="price-info">${data.nodes.length} nœuds calculés</div>
             </div>
             <div class="price-box blackscholes">
                 <h4>📈 Black-Scholes</h4>
-                <div class="price-value">${blackScholesPrice.toFixed(4)}€</div>
+                <div class="price-value">${blackScholesPrice.toFixed(6)}€</div>
                 <div class="price-info">Prix théorique exact</div>
             </div>
         </div>
@@ -163,7 +177,7 @@ function showNewCalculationResult(data, params) {
         <div class="difference-section">
             <center><h4>📊 Différence</h4></center>
             <p style="font-size: 1.2rem; text-align: center; margin: 1rem 0;">
-                ${difference > 0 ? '+' : ''}${difference.toFixed(4)}€ 
+                ${difference > 0 ? '+' : ''}${difference.toFixed(6)}€ 
                 (${percentDiff > 0 ? '+' : ''}${percentDiff.toFixed(2)}%)
             </p>
         </div>
@@ -281,17 +295,60 @@ function hideVisualization() {
     document.getElementById('visualization').style.display = 'none';
 }
 
-function drawTree(data) {
-    console.log("DrawTree appelé avec:", data);
-    console.log("Noeuds à dessiner:", data.nodes.length);
-    console.log("Liens à dessiner:", data.edges.length);
+function refreshVisualization() {
+    console.log("🔄 Rafraîchissement complet de la visualisation");
     
-    // Nettoyer le SVG
-    g.selectAll("*").remove();
+    // Afficher la section de visualisation
+    showVisualization();
+    
+    // Nettoyer complètement le SVG et supprimer tous les tooltips
+    if (g) {
+        g.selectAll("*").remove();
+    }
+    
+    // Supprimer tous les tooltips existants
+    d3.selectAll(".tooltip").remove();
+    
+    // Réinitialiser le zoom
+    if (svg) {
+        svg.transition()
+            .duration(0) // Pas d'animation pour le reset
+            .call(
+                d3.zoom().transform,
+                d3.zoomIdentity
+            );
+    }
+    
+    console.log("✅ Visualisation nettoyée et prête pour le nouveau dessin");
+}
+
+function drawTree(data) {
+    console.log("🌳 DrawTree appelé avec:", data);
+    console.log("📊 Noeuds à dessiner:", data.nodes.length);
+    console.log("🔗 Liens à dessiner:", data.edges.length);
+    
+    // Vérification des données
+    if (!data || !data.nodes || !data.edges || !data.tree_params) {
+        console.error("❌ Données invalides pour dessiner l'arbre");
+        return;
+    }
+    
+    // Nettoyer complètement le SVG avant de redessiner
+    if (g) {
+        g.selectAll("*").remove();
+        console.log("🧹 SVG nettoyé");
+    }
     
     const container = document.querySelector('.tree-area');
+    if (!container) {
+        console.error("❌ Container .tree-area introuvable");
+        return;
+    }
+    
     const width = container.clientWidth;
     const height = container.clientHeight;
+    
+    console.log(`📐 Dimensions du container: ${width}x${height}`);
     
     // Paramètres adaptatifs selon N pour gérer jusqu'à N=400+
     const N = data.tree_params.N;
@@ -497,9 +554,9 @@ function drawTree(data) {
             // Contenu du tooltip
             let tooltipContent = `
                 <div style="font-weight: bold; margin-bottom: 5px; color: #4fc3f7;">Étape ${d.step}</div>
-                <div><strong>Prix action:</strong> ${d.value.toFixed(4)}€</div>
-                <div><strong>Prix option:</strong> ${d.option_value.toFixed(4)}€</div>
-                <div><strong>Payoff:</strong> ${d.payoff.toFixed(4)}€</div>
+                <div><strong>Prix action:</strong> ${d.value.toFixed(6)}€</div>
+                <div><strong>Prix option:</strong> ${d.option_value.toFixed(6)}€</div>
+                <div><strong>Payoff:</strong> ${d.payoff.toFixed(6)}€</div>
             `;
             
             // Ajouter les probabilités si disponibles
@@ -536,10 +593,14 @@ function drawTree(data) {
         fullHeight / 2 - scale * (bounds.y + bounds.height / 2)
     ];
     
+    console.log(`🔍 Auto-zoom appliqué: scale=${scale.toFixed(2)}, translate=[${translate[0].toFixed(1)}, ${translate[1].toFixed(1)}]`);
+    
     svg.transition()
         .duration(750)
         .call(
             d3.zoom().transform,
             d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
         );
+    
+    console.log("✅ Arbre dessiné avec succès !");
 }
