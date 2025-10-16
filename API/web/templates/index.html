@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,18 +11,18 @@
     <div class="container">
         <header class="header">
             <h1>🌳 Pricer Trinomial Pro</h1>
-            <p>Évaluation d'options par modèle trinomial - Dauphine M2 - VERDELHAN - LE NET</p>
+            <p>Options evaluation using trinomial model - Dauphine M2 - VERDELHAN - LE NET</p>
         </header>
 
         <main class="main-content">
             <!-- Section de configuration -->
             <section class="config-section">
                 <div class="card">
-                    <h2>📊 Configuration de l'option</h2>
+                    <h2>📊 Option Configuration</h2>
                     <form id="pricing-form">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="S0">Prix spot (S₀) €</label>
+                                <label for="S0">Spot price (S₀) €</label>
                                 <input type="number" id="S0" step="0.01" value="100" required>
                             </div>
                             <div class="form-group">
@@ -30,38 +30,38 @@
                                 <input type="number" id="K" step="0.01" value="100" required>
                             </div>
                             <div class="form-group">
-                                <label for="start_date">Date de début</label>
+                                <label for="start_date">Start date</label>
                                 <input type="date" id="start_date" required>
                             </div>
                             <div class="form-group">
-                                <label for="maturity_date">Date de maturité</label>
+                                <label for="maturity_date">Maturity date</label>
                                 <input type="date" id="maturity_date" required>
                             </div>
                             <div class="form-group">
-                                <label for="r">Taux sans risque (r)</label>
+                                <label for="r">Risk-free rate (r)</label>
                                 <input type="number" id="r" step="0.001" value="0.05" min="0" required>
                             </div>
                             <div class="form-group">
-                                <label for="sigma">Volatilité (σ)</label>
+                                <label for="sigma">Volatility (σ)</label>
                                 <input type="number" id="sigma" step="0.001" value="0.2" min="0.001" required>
                             </div>
                             <div class="form-group">
-                                <label for="N">Étapes (N)</label>
+                                <label for="N">Steps (N)</label>
                                 <input type="number" id="N" value="5" min="1" required>
                             </div>
                             <div class="form-group">
-                                <label for="dividend">Dividende (€)</label>
+                                <label for="dividend">Dividend (€)</label>
                                 <input type="number" id="dividend" step="0.01" value="0" min="0">
                             </div>
                             <div class="form-group">
-                                <label for="ex_div_date">Date ex-dividende</label>
+                                <label for="ex_div_date">Ex-dividend date</label>
                                 <input type="date" id="ex_div_date">
                             </div>
                         </div>
 
                         <div class="option-toggles">
                             <div class="toggle-group">
-                                <label>Type d'option</label>
+                                <label>Option type</label>
                                 <div class="toggle-buttons">
                                     <button type="button" class="toggle-btn active" data-option="call">Call</button>
                                     <button type="button" class="toggle-btn" data-option="put">Put</button>
@@ -69,15 +69,15 @@
                             </div>
                             
                             <div class="toggle-group">
-                                <label>Style d'option</label>
+                                <label>Option style</label>
                                 <div class="toggle-buttons">
-                                    <button type="button" class="toggle-btn active" data-style="european">Européenne</button>
-                                    <button type="button" class="toggle-btn" data-style="american">Américaine</button>
+                                    <button type="button" class="toggle-btn active" data-style="european">European</button>
+                                    <button type="button" class="toggle-btn" data-style="american">American</button>
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" class="calculate-btn">🚀 Calculer le prix</button>
+                        <button type="submit" class="calculate-btn">🚀 Calculate price</button>
                     </form>
                 </div>
             </section>
@@ -92,17 +92,17 @@
                 </div>
             </section>
 
-            <!-- Section de visualisation -->
+            <!-- Visualization section -->
             <section id="visualization" class="visualization-section" style="display: none;">
                 <div class="card">
-                    <h2>🌳 Visualisation de l'arbre trinomial</h2>
+                    <h2>🌳 Trinomial tree visualization</h2>
                     <div class="tree-area">
                         <svg id="tree-svg"></svg>
                     </div>
                 </div>
             </section>
 
-            <!-- Ancien système de résultats (caché par défaut) -->
+            <!-- Old results system (hidden by default) -->
             <div id="result" style="display: none;"></div>
         </main>
     </div>

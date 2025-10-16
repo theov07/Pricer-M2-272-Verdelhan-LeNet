@@ -77,7 +77,7 @@ async function handleFormSubmit(event) {
     // Indicateur de chargement
     const calculateBtn = document.querySelector('.calculate-btn');
     const originalText = calculateBtn.innerHTML;
-    calculateBtn.innerHTML = '<span class="loading-spinner">⏳</span> Calcul en cours...';
+    calculateBtn.innerHTML = '<span class="loading-spinner">⏳</span> Calculating...';
     calculateBtn.disabled = true;
     
     // Récupérer les valeurs du formulaire avec dates obligatoires
@@ -118,8 +118,8 @@ async function handleFormSubmit(event) {
             // Nettoyer et afficher les résultats
             showNewCalculationResult(result.data, formData);
             
-            // Rafraîchir complètement la visualisation
-            console.log("🔄 Rafraîchissement de la visualisation pour N =", formData.N);
+            // Completely refresh the visualization
+            console.log("🔄 Refreshing visualization for N =", formData.N);
             refreshVisualization();
             drawTree(result.data);
         } else {
@@ -142,6 +142,66 @@ function showResult(message, type) {
     resultDiv.style.display = 'block';
 }
 
+function generateExecutionTimeSection(executionTimes) {
+    if (!executionTimes || !executionTimes.trinomial_time) {
+        return '';
+    }
+    
+    const trinomialTime = executionTimes.trinomial_time; // Keep in seconds
+    const blackScholesTime = executionTimes.blackscholes_time || null;
+    
+    let speedComparisonText = '';
+    if (blackScholesTime) {
+        const timeDifference = trinomialTime - blackScholesTime;
+        const sign = timeDifference > 0 ? '+' : '';
+        speedComparisonText = `<span style="color: ${timeDifference > 0 ? '#ff6b6b' : '#51cf66'};">${sign}${timeDifference.toFixed(6)}s</span>`;
+    }
+    
+    return `
+        <div class="execution-time-section" style="margin-top: 2rem;">
+            <center><h4>⚡ Execution Performance</h4></center>
+            
+            <div class="execution-time-table" style="
+                display: grid; 
+                grid-template-columns: 1fr 1fr 1fr; 
+                gap: 1rem; 
+                margin-top: 1rem;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 10px;
+                padding: 1.5rem;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            ">
+                <div class="time-cell trinomial" style="text-align: center;">
+                    <div style="color: #4fc3f7; font-weight: bold; margin-bottom: 0.5rem;">
+                        🌳 Trinomial
+                    </div>
+                    <div style="font-size: 1.3rem; color: #ffffff;">
+                        ${trinomialTime.toFixed(6)}s
+                    </div>
+                </div>
+                
+                <div class="time-cell blackscholes" style="text-align: center;">
+                    <div style="color: #66bb6a; font-weight: bold; margin-bottom: 0.5rem;">
+                        📈 Black-Scholes
+                    </div>
+                    <div style="font-size: 1.3rem; color: #ffffff;">
+                        ${blackScholesTime ? blackScholesTime.toFixed(6) + 's' : 'N/A'}
+                    </div>
+                </div>
+                
+                <div class="time-cell ratio" style="text-align: center;">
+                    <div style="color: #ffa726; font-weight: bold; margin-bottom: 0.5rem;">
+                        📊 Difference
+                    </div>
+                    <div style="font-size: 1.3rem; color: #ffffff;">
+                        ${speedComparisonText || 'N/A'}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function showNewCalculationResult(data, params) {
     // Cacher l'ancien système
     document.getElementById('result').style.display = 'none';
@@ -157,30 +217,32 @@ function showNewCalculationResult(data, params) {
     // Option type info
     const optionInfo = data.option_info || { type: 'call', style: 'european' };
     
-    // Section principale - Comparaison des prix
+        // Section principale - Comparaison des prix
     document.getElementById('main-results').innerHTML = `
-        <h3>💰 Résultats du Pricing</h3>
+        <h3>💰 Pricing Results</h3>
         
         <div class="price-comparison">
             <div class="price-box trinomial">
-                <h4>🌳 Modèle Trinomial</h4>
+                <h4>🌳 Trinomial Model</h4>
                 <div class="price-value">${trinomialPrice.toFixed(6)}€</div>
-                <div class="price-info">${data.nodes.length} nœuds calculés</div>
+                <div class="price-info">${data.nodes.length} nodes calculated</div>
             </div>
             <div class="price-box blackscholes">
                 <h4>📈 Black-Scholes</h4>
                 <div class="price-value">${blackScholesPrice.toFixed(6)}€</div>
-                <div class="price-info">Prix théorique exact</div>
+                <div class="price-info">Exact theoretical price</div>
             </div>
         </div>
         
         <div class="difference-section">
-            <center><h4>📊 Différence</h4></center>
+            <center><h4>📊 Difference</h4></center>
             <p style="font-size: 1.2rem; text-align: center; margin: 1rem 0;">
                 ${difference > 0 ? '+' : ''}${difference.toFixed(6)}€ 
                 (${percentDiff > 0 ? '+' : ''}${percentDiff.toFixed(2)}%)
             </p>
         </div>
+        
+        ${generateExecutionTimeSection(data.execution_times)}
     `;
     
     // Section détaillée
@@ -190,44 +252,44 @@ function showNewCalculationResult(data, params) {
     if (dateInfo.calculated_from_dates) {
         maturityDisplay = `
             <div class="detail-item">
-                <div class="detail-label">Date de début</div>
-                <div class="detail-value">${new Date(dateInfo.start_date).toLocaleDateString('fr-FR')}</div>
+                <div class="detail-label">Start date</div>
+                <div class="detail-value">${new Date(dateInfo.start_date).toLocaleDateString('en-US')}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Date de maturité</div>
-                <div class="detail-value">${new Date(dateInfo.maturity_date).toLocaleDateString('fr-FR')}</div>
+                <div class="detail-label">Maturity date</div>
+                <div class="detail-value">${new Date(dateInfo.maturity_date).toLocaleDateString('en-US')}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Maturité calculée</div>
-                <div class="detail-value">${dateInfo.T_years.toFixed(4)} ans (${dateInfo.T_days} jours)</div>
+                <div class="detail-label">Calculated maturity</div>
+                <div class="detail-value">${dateInfo.T_years.toFixed(4)} years (${dateInfo.T_days} days)</div>
             </div>
         `;
     } else {
         maturityDisplay = `
                         <div class="detail-item">
-                <div class="detail-label">Date de début</div>
-                <div class="detail-value">${new Date(params.start_date).toLocaleDateString('fr-FR')}</div>
+                <div class="detail-label">Start date</div>
+                <div class="detail-value">${new Date(params.start_date).toLocaleDateString('en-US')}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Date de maturité</div>
-                <div class="detail-value">${new Date(params.maturity_date).toLocaleDateString('fr-FR')}</div>
+                <div class="detail-label">Maturity date</div>
+                <div class="detail-value">${new Date(params.maturity_date).toLocaleDateString('en-US')}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Maturité calculée</div>
-                <div class="detail-value">${data.date_info ? data.date_info.T_years.toFixed(4) : 'N/A'} ans (${data.date_info ? data.date_info.T_days : 'N/A'} jours)</div>
+                <div class="detail-label">Calculated maturity</div>
+                <div class="detail-value">${data.date_info ? data.date_info.T_years.toFixed(4) : 'N/A'} years (${data.date_info ? data.date_info.T_days : 'N/A'} days)</div>
             </div>
         `;
     }
     
     document.getElementById('detailed-results').innerHTML = `
-        <h4>🔍 Détails des paramètres</h4>
+        <h4>🔍 Parameter Details</h4>
         <div class="details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
             <div class="detail-item">
-                <div class="detail-label">Type d'option</div>
+                <div class="detail-label">Option type</div>
                 <div class="detail-value">${optionInfo.type.toUpperCase()} ${optionInfo.style}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Prix spot (S₀)</div>
+                <div class="detail-label">Spot price (S₀)</div>
                 <div class="detail-value">${params.S0}€</div>
             </div>
             <div class="detail-item">
@@ -236,54 +298,39 @@ function showNewCalculationResult(data, params) {
             </div>
             ${maturityDisplay}
             <div class="detail-item">
-                <div class="detail-label">Taux sans risque (r)</div>
+                <div class="detail-label">Risk-free rate (r)</div>
                 <div class="detail-value">${(params.r * 100).toFixed(1)}%</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Volatilité (σ)</div>
+                <div class="detail-label">Volatility (σ)</div>
                 <div class="detail-value">${(params.sigma * 100).toFixed(1)}%</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Étapes (N)</div>
+                <div class="detail-label">Steps (N)</div>
                 <div class="detail-value">${params.N}</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">Nœuds calculés</div>
+                <div class="detail-label">Nodes calculated</div>
                 <div class="detail-value">${data.nodes.length}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Period (days)</div>
+                <div class="detail-value">${dateInfo.T_days}</div>
             </div>
             ${params.dividend > 0 ? `
             <div class="detail-item">
-                <div class="detail-label">Dividende</div>
+                <div class="detail-label">Dividend</div>
                 <div class="detail-value">${params.dividend}€</div>
             </div>
             ` : ''}
             ${params.ex_div_date ? `
             <div class="detail-item">
-                <div class="detail-label">Date ex-dividende</div>
-                <div class="detail-value">${new Date(params.ex_div_date).toLocaleDateString('fr-FR')}</div>
+                <div class="detail-label">Ex-dividend date</div>
+                <div class="detail-value">${new Date(params.ex_div_date).toLocaleDateString('en-US')}</div>
             </div>
             ` : ''}
         </div>
         
-        ${dateInfo.calculated_from_dates ? `
-        <div class="date-info">
-            <h4>📅 Informations sur les dates</h4>
-            <div class="date-info-grid">
-                <div class="date-info-item">
-                    <span class="date-info-label">Période:</span>
-                    <span class="date-info-value">${dateInfo.T_days} jours</span>
-                </div>
-                <div class="date-info-item">
-                    <span class="date-info-label">Années:</span>
-                    <span class="date-info-value">${dateInfo.T_years.toFixed(6)}</span>
-                </div>
-                <div class="date-info-item">
-                    <span class="date-info-label">Calcul automatique:</span>
-                    <span class="date-info-value">✅ Activé</span>
-                </div>
-            </div>
-        </div>
-        ` : ''}
     `;
 }
 

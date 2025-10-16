@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import sys
 import os
+import time
 from API.visualization.tree_visualizer import TreeVisualizer
 from Core.BlackScholes import BlackScholes
 from Core.Option import Option
@@ -12,7 +13,7 @@ api_bp = Blueprint('api', __name__)
 
 @api_bp.route('/api/calculate', methods=['POST'])
 def api_calculate():
-    """Calculer l'option avec les paramètres fournis"""
+    """Calculate option with provided parameters"""
     try:
         params = request.json
         
@@ -48,7 +49,7 @@ def api_calculate():
             except ValueError:
                 return jsonify({'success': False, 'error': 'Format de date ex-dividende invalide. Utilisez YYYY-MM-DD'}), 400
         
-        # Création de l'option avec dates (T sera calculé automatiquement)
+        # Create option with dates (T will be calculated automatically)
         try:
             option_obj = Option(
                 K=params['K'],
@@ -70,16 +71,19 @@ def api_calculate():
         if params['N'] <= 0:
             return jsonify({'success': False, 'error': 'Le nombre d\'étapes N doit être positif'}), 400
         if params['S0'] <= 0:
-            return jsonify({'success': False, 'error': 'Le prix spot S0 doit être positif'}), 400
+            return jsonify({'success': False, 'error': 'Spot price S0 must be positive'}), 400
         if params['K'] <= 0:
             return jsonify({'success': False, 'error': 'Le strike K doit être positif'}), 400
         
-        # Créer le visualiseur et calculer
+        # Create visualizer and calculate with time measurement
         visualizer = TreeVisualizer()
+        
+        # Mesure du temps pour le modèle trinomial
+        trinomial_start_time = time.time()
         data = visualizer.create_tree_data(
             S0=params['S0'],
             K=params['K'],
-            T=T_calculated,  # Utiliser le T calculé à partir des dates
+            T=T_calculated,  # Use T calculated from dates
             r=params['r'],
             sigma=params['sigma'],
             N=params['N'],
@@ -88,18 +92,32 @@ def api_calculate():
             dividend=dividend,
             ex_div_date=ex_div_date_obj
         )
+        trinomial_end_time = time.time()
+        trinomial_execution_time = trinomial_end_time - trinomial_start_time
         
-        # Calcul Black-Scholes pour comparaison
+        # Black-Scholes calculation for comparison with time measurement
         try:
+            # Mesure du temps pour Black-Scholes
+            bs_start_time = time.time()
             bs_model = BlackScholes(
                 S=params['S0'],
                 K=params['K'],
-                T=T_calculated,  # Utiliser le T calculé
+                T=T_calculated,  # Use calculated T
                 r=params['r'],
                 sigma=params['sigma']
             )
             bs_price = bs_model.price(option_type)
+            bs_end_time = time.time()
+            bs_execution_time = bs_end_time - bs_start_time
+            
             data['black_scholes_price'] = bs_price
+            
+            # Ajouter les temps d'exécution
+            data['execution_times'] = {
+                'trinomial_time': trinomial_execution_time,
+                'blackscholes_time': bs_execution_time,
+                'speed_ratio': trinomial_execution_time / bs_execution_time if bs_execution_time > 0 else 0
+            }
             
             # Ajouter les grecques si demandées
             if params.get('include_greeks', False):
@@ -109,6 +127,11 @@ def api_calculate():
             # En cas d'erreur Black-Scholes, continuer sans
             data['black_scholes_price'] = None
             data['bs_error'] = str(e)
+            data['execution_times'] = {
+                'trinomial_time': trinomial_execution_time,
+                'blackscholes_time': None,
+                'speed_ratio': None
+            }
         
         # Ajouter les informations de dates
         data['date_info'] = {
@@ -133,7 +156,7 @@ def api_calculate():
 
 @api_bp.route('/api/tree', methods=['POST'])
 def api_tree():
-    """Obtenir uniquement les données de l'arbre pour visualisation"""
+    """Get tree data only for visualization"""
     try:
         params = request.json
         
@@ -170,7 +193,7 @@ def api_tree():
             'style': option_style
         }
         
-        # Informations sur l'arbre
+        # Tree information
         data['tree_info'] = {
             'node_count': len(data['nodes']),
             'edge_count': len(data['edges']),
@@ -186,10 +209,10 @@ def api_tree():
         })
         
     except Exception as e:
-        print(f"Erreur dans api_calculate: {e}")
+        print(f"Error in api_calculate: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': f'Erreur de calcul: {str(e)}'
+            'error': f'Calculation error: {str(e)}'
         }), 500
