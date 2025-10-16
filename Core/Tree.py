@@ -77,7 +77,7 @@ class Tree:
             # Calculer les valeurs des 3 nœuds suivants
             alpha = node.get_alpha()
             
-            mid_value = node.value * math.exp(self.market.rate * self.deltaT) - self.dividend_value(next_step)
+            mid_value = node.value * math.exp(self.market.rate * self.deltaT)
             up_value = mid_value * alpha
             down_value = mid_value / alpha
             
@@ -166,14 +166,14 @@ class Tree:
     
 
 
-    def dividend_value(self, step):
+    def apply_dividend_to_step(self, step):
         """
-        Calcule la valeur du dividende à une étape donnée.
+        Applique le dividende à tous les nœuds d'un step donné.
+        Cette méthode est appelée APRÈS la recombinaison pour éviter de casser les connexions.
         """
-
-        if self.dividend_step == step:
-            return self.market.dividend
-        return 0.0
+        if step < len(self.nodes_by_step) and self.market.dividend is not None:
+            for node in self.nodes_by_step[step]:
+                node.value -= self.market.dividend
 
     
 
