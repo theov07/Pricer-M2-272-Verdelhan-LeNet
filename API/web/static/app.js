@@ -160,7 +160,7 @@ function generateExecutionTimeSection(executionTimes) {
     
     return `
         <div class="execution-time-section" style="margin-top: 2rem;">
-            <center><h4>⚡ Execution Performance</h4></center>
+            <center><h4>Execution Performance</h4></center>
             
             <div class="execution-time-table" style="
                 display: grid; 
@@ -173,8 +173,8 @@ function generateExecutionTimeSection(executionTimes) {
                 border: 1px solid rgba(255, 255, 255, 0.1);
             ">
                 <div class="time-cell trinomial" style="text-align: center;">
-                    <div style="color: #4fc3f7; font-weight: bold; margin-bottom: 0.5rem;">
-                        🌳 Trinomial
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Trinomial
                     </div>
                     <div style="font-size: 1.3rem; color: #ffffff;">
                         ${trinomialTime.toFixed(6)}s
@@ -182,8 +182,8 @@ function generateExecutionTimeSection(executionTimes) {
                 </div>
                 
                 <div class="time-cell blackscholes" style="text-align: center;">
-                    <div style="color: #66bb6a; font-weight: bold; margin-bottom: 0.5rem;">
-                        📈 Black-Scholes
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Black-Scholes
                     </div>
                     <div style="font-size: 1.3rem; color: #ffffff;">
                         ${blackScholesTime ? blackScholesTime.toFixed(6) + 's' : 'N/A'}
@@ -191,8 +191,8 @@ function generateExecutionTimeSection(executionTimes) {
                 </div>
                 
                 <div class="time-cell ratio" style="text-align: center;">
-                    <div style="color: #ffffff; font-weight: bold; margin-bottom: 0.5rem;">
-                        📊 Difference
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Difference
                     </div>
                     <div style="font-size: 1.3rem; color: #ffffff;">
                         ${speedComparisonText || 'N/A'}
@@ -213,7 +213,7 @@ function generateGreeksSection(greeks) {
     
     return `
         <div class="greeks-section" style="margin-top: 2rem;">
-            <center><h4>🔬 Option Greeks (Sensitivities)</h4></center>
+            <center><h4>Option Greeks (Sensitivities)</h4></center>
             
             <div class="greeks-grid" style="
                 display: grid; 
@@ -226,8 +226,8 @@ function generateGreeksSection(greeks) {
                 border: 1px solid rgba(255, 255, 255, 0.1);
             ">
                 <div class="greek-item" style="text-align: center;">
-                    <div style="color: #4fc3f7; font-weight: bold; margin-bottom: 0.5rem;">
-                        📈 Delta (∂V/∂S)
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Delta (∂V/∂S)
                     </div>
                     <div style="font-size: 1.2rem; color: #ffffff;">
                         ${greeks.delta.toFixed(6)}
@@ -238,8 +238,8 @@ function generateGreeksSection(greeks) {
                 </div>
                 
                 <div class="greek-item" style="text-align: center;">
-                    <div style="color: #66bb6a; font-weight: bold; margin-bottom: 0.5rem;">
-                        📊 Gamma (∂²V/∂S²)
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Gamma (∂²V/∂S²)
                     </div>
                     <div style="font-size: 1.2rem; color: #ffffff;">
                         ${greeks.gamma.toFixed(8)}
@@ -250,8 +250,8 @@ function generateGreeksSection(greeks) {
                 </div>
                 
                 <div class="greek-item" style="text-align: center;">
-                    <div style="color: #ff7043; font-weight: bold; margin-bottom: 0.5rem;">
-                        ⏰ Theta (∂V/∂t)
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Theta (∂V/∂t)
                     </div>
                     <div style="font-size: 1.2rem; color: #ffffff;">
                         ${greeks.theta.toFixed(6)}
@@ -262,8 +262,8 @@ function generateGreeksSection(greeks) {
                 </div>
                 
                 <div class="greek-item" style="text-align: center;">
-                    <div style="color: #ab47bc; font-weight: bold; margin-bottom: 0.5rem;">
-                        🌊 Vega (∂V/∂σ)
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Vega (∂V/∂σ)
                     </div>
                     <div style="font-size: 1.2rem; color: #ffffff;">
                         ${greeks.vega.toFixed(6)}
@@ -274,8 +274,8 @@ function generateGreeksSection(greeks) {
                 </div>
                 
                 <div class="greek-item" style="text-align: center;">
-                    <div style="color: #ffa726; font-weight: bold; margin-bottom: 0.5rem;">
-                        💰 Rho (∂V/∂r)
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                        Rho (∂V/∂r)
                     </div>
                     <div style="font-size: 1.2rem; color: #ffffff;">
                         ${greeks.rho.toFixed(6)}
@@ -322,7 +322,7 @@ function showNewCalculationResult(data, params, greeks) {
         </div>
         
         <div class="difference-section">
-            <center><h4>📊 Difference</h4></center>
+            <center><h4>Difference</h4></center>
             <p style="font-size: 1.2rem; text-align: center; margin: 1rem 0;">
                 ${difference > 0 ? '+' : ''}${difference.toFixed(6)}€ 
                 (${percentDiff > 0 ? '+' : ''}${percentDiff.toFixed(2)}%)
