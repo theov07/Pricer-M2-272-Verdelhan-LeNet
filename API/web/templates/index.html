@@ -6,6 +6,7 @@
     <title>Pricer Trinomial Pro - Dauphine M2</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -99,6 +100,15 @@
                     <div class="tree-area">
                         <svg id="tree-svg"></svg>
                     </div>
+                </div>
+            </section>
+
+            <!-- Convergence Analysis section -->
+            <section id="convergence-section" class="convergence-section" style="display: none;">
+                <div class="card">
+                    <h2>📈 Convergence Analysis</h2>
+                    <p style="color: #aaa; margin-bottom: 1rem;">Analysis of trinomial model convergence to Black-Scholes theoretical price</p>
+                    <div id="convergence-plot" style="width: 100%; height: 500px;"></div>
                 </div>
             </section>
 

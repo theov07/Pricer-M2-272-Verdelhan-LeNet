@@ -252,3 +252,71 @@ def api_tree():
             'success': False,
             'error': f'Calculation error: {str(e)}'
         }), 500
+
+
+@api_bp.route('/api/convergence', methods=['POST'])
+def api_convergence():
+    """Generate convergence analysis data"""
+    try:
+        params = request.json
+        steps = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500]
+        
+        # Import nécessaire
+        from Core.Market import Market
+        from Core.Tree import Tree
+        from Core.Option import Option
+        from Core.Greeks import Greeks
+        import time
+        
+        results = []
+        
+        for N in steps:
+            try:
+                # Créer les objets avec N steps
+                market = Market(
+                    S0=params['S0'],
+                    rate=params['r'],
+                    sigma=params['sigma']
+                )
+                
+                # Créer l'option avec les dates (comme dans l'API principale)
+                option = Option(
+                    K=params['K'],
+                    opt_type=params.get('option_type', 'call'),
+                    style=params.get('option_style', 'european'),
+                    start_date=params['start_date'],
+                    maturity_date=params['maturity_date']
+                )
+                
+                tree = Tree(market, option, N)
+                
+                # Calculer le prix trinomial
+                trinomial_price = tree.get_option_price()
+                
+                # Calculer Black-Scholes pour comparaison
+                bs = BlackScholes(market.S0, option.K, option.T, market.rate, market.sigma)
+                blackscholes_price = bs.call_price() if option.type == 'call' else bs.put_price()
+                
+                results.append({
+                    'N': N,
+                    'trinomial_price': trinomial_price,
+                    'blackscholes_price': blackscholes_price
+                })
+                
+            except Exception as e:
+                print(f"Error for N={N}: {e}")
+                continue
+        
+        return jsonify({
+            'success': True,
+            'data': results
+        })
+        
+    except Exception as e:
+        print(f"Error in api_convergence: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Convergence calculation error: {str(e)}'
+        }), 500

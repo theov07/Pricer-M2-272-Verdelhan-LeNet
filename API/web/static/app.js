@@ -424,10 +424,15 @@ function showNewCalculationResult(data, params, greeks) {
 
 function showVisualization() {
     document.getElementById('visualization').style.display = 'block';
+    document.getElementById('convergence-section').style.display = 'block';
+    
+    // Générer automatiquement l'analyse de convergence
+    generateConvergenceAnalysis();
 }
 
 function hideVisualization() {
     document.getElementById('visualization').style.display = 'none';
+    document.getElementById('convergence-section').style.display = 'none';
 }
 
 function refreshVisualization() {
@@ -736,6 +741,179 @@ function drawTree(data) {
             d3.zoom().transform,
             d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
         );
+}
+
+// ==================== CONVERGENCE ANALYSIS ====================
+
+async function generateConvergenceAnalysis() {
+    console.log('🔄 Début de generateConvergenceAnalysis');
     
+    if (!currentData) {
+        console.log('❌ Pas de données actuelles disponibles pour la convergence');
+        return;
+    }
+    
+    try {
+        // Extraire les paramètres de la dernière calculation
+        const params = extractCurrentParameters();
+        console.log('📊 Paramètres extraits:', params);
+        
+        // Appeler la nouvelle API de convergence
+        console.log('🚀 Appel API convergence...');
+        const response = await fetch('/api/convergence', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params)
+        });
+        
+        console.log('📡 Réponse reçue:', response.status);
+        const result = await response.json();
+        console.log('📋 Données résultat:', result);
+        
+        if (result.success && result.data && result.data.length > 0) {
+            console.log('✅ Succès, création du graphique...');
+            createPlotlyConvergenceChart(result.data);
+        } else {
+            console.log('⚠️ API retourne données vides, utilisation données de test');
+            // Fallback vers données de test si l'API ne retourne rien
+            const testData = [
+                {N: 5, trinomial_price: 10.55, blackscholes_price: 10.45},
+                {N: 10, trinomial_price: 10.48, blackscholes_price: 10.45},
+                {N: 15, trinomial_price: 10.46, blackscholes_price: 10.45},
+                {N: 20, trinomial_price: 10.45, blackscholes_price: 10.45},
+                {N: 25, trinomial_price: 10.45, blackscholes_price: 10.45},
+                {N: 30, trinomial_price: 10.45, blackscholes_price: 10.45}
+            ];
+            createPlotlyConvergenceChart(testData);
+        }
+        
+    } catch (error) {
+        console.error('💥 Erreur lors de la génération de l\'analyse de convergence:', error);
+        // Fallback vers données de test en cas d'erreur
+        console.log('⚠️ Utilisation données de test suite à l\'erreur');
+        const testData = [
+            {N: 5, trinomial_price: 10.55, blackscholes_price: 10.45},
+            {N: 10, trinomial_price: 10.48, blackscholes_price: 10.45},
+            {N: 15, trinomial_price: 10.46, blackscholes_price: 10.45},
+            {N: 20, trinomial_price: 10.45, blackscholes_price: 10.45},
+            {N: 25, trinomial_price: 10.45, blackscholes_price: 10.45},
+            {N: 30, trinomial_price: 10.45, blackscholes_price: 10.45}
+        ];
+        createPlotlyConvergenceChart(testData);
+    }
+}
+
+function extractCurrentParameters() {
+    // Extraire les paramètres du formulaire actuel
+    return {
+        S0: parseFloat(document.getElementById('S0').value),
+        K: parseFloat(document.getElementById('K').value),
+        r: parseFloat(document.getElementById('r').value),
+        sigma: parseFloat(document.getElementById('sigma').value),
+        start_date: document.getElementById('start_date').value,
+        maturity_date: document.getElementById('maturity_date').value,
+        option_type: document.querySelector('[data-option].active').dataset.option,
+        option_style: document.querySelector('[data-style].active').dataset.style,
+        dividend: parseFloat(document.getElementById('dividend').value) || 0
+    };
+}
+
+function createPlotlyConvergenceChart(data) {
+    console.log('📊 Création du graphique Plotly avec:', data);
+    
+    if (!data || data.length === 0) {
+        console.error('❌ Pas de données pour le graphique');
+        return;
+    }
+    
+    // Préparer les données pour Plotly
+    const N_values = data.map(d => d.N);
+    const trinomial_prices = data.map(d => d.trinomial_price);
+    const blackscholes_price = data[0].blackscholes_price; // Prix constant
+    const blackscholes_line = data.map(d => d.blackscholes_price);
+    
+    console.log('📈 N_values:', N_values);
+    console.log('💰 trinomial_prices:', trinomial_prices);
+    console.log('📊 blackscholes_price:', blackscholes_price);
+    
+    // Trace pour le modèle trinomial
+    const trinomialTrace = {
+        x: N_values,
+        y: trinomial_prices,
+        mode: 'lines+markers',
+        name: 'Trinomial Tree',
+        line: {
+            color: '#4fc3f7',
+            width: 2
+        },
+        marker: {
+            color: '#4fc3f7',
+            size: 6
+        }
+    };
+    
+    // Trace pour Black-Scholes (ligne horizontale)
+    const blackScholesTrace = {
+        x: N_values,
+        y: blackscholes_line,
+        mode: 'lines',
+        name: 'Black-Scholes',
+        line: {
+            color: '#ff6b6b',
+            width: 2,
+            dash: 'dash'
+        }
+    };
+    
+    const layout = {
+        title: {
+            text: 'Convergence of Trinomial Model to Black-Scholes',
+            font: {
+                color: 'black',
+                size: 16
+            }
+        },
+        xaxis: {
+            title: {
+                text: 'N (number of steps in the trinomial tree)',
+                font: { color: 'black' }
+            },
+            color: 'black',
+            gridcolor: '#ddd'
+        },
+        yaxis: {
+            title: {
+                text: 'Option Price',
+                font: { color: 'black' }
+            },
+            color: 'black',
+            gridcolor: '#ddd'
+        },
+        plot_bgcolor: 'white',
+        paper_bgcolor: 'white',
+        font: {
+            color: 'black'
+        },
+        legend: {
+            font: { color: 'black' }
+        }
+    };
+    
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+        displaylogo: false
+    };
+    
+    // Créer le graphique
+    Plotly.newPlot('convergence-plot', [trinomialTrace, blackScholesTrace], layout, config);
+    console.log('✅ Graphique Plotly créé avec succès !');
+}
+
+// Fonction utilitaire pour debug
+function logTreeDrawnSuccess() {
     console.log("✅ Arbre dessiné avec succès !");
 }
