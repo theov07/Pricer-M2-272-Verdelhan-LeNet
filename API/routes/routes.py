@@ -4,6 +4,7 @@ import os
 import time
 from API.visualization.tree_visualizer import TreeVisualizer
 from Core.BlackScholes import BlackScholes
+from Core.Greeks import Greeks
 from Core.Option import Option
 from datetime import datetime
 
@@ -95,6 +96,39 @@ def api_calculate():
         trinomial_end_time = time.time()
         trinomial_execution_time = trinomial_end_time - trinomial_start_time
         
+        # Calculate Greeks using trinomial tree
+        greeks_data = None
+        try:
+            from Core.Market import Market
+            
+            # Create market and option objects for Greeks calculation
+            market = Market(
+                S0=params['S0'],
+                rate=params['r'],
+                sigma=params['sigma'],
+                dividend=dividend,
+                ex_div_date=ex_div_date_obj
+            )
+            
+            option = Option(
+                K=params['K'],
+                opt_type=option_type,
+                style=option_style,
+                T=T_calculated
+            )
+            
+            # Calculate Greeks with smaller steps for faster computation
+            greeks_calculator = Greeks(market, option, min(params['N'], 100))  # Limit N for Greeks
+            greeks_data = greeks_calculator.calculate_all_greeks()
+            print(f"Greeks calculated: {greeks_data}")
+            
+        except Exception as e:
+            # In case of Greeks calculation error, continue without Greeks
+            greeks_data = None
+            print(f"Greeks calculation error: {e}")
+            import traceback
+            traceback.print_exc()
+        
         # Black-Scholes calculation for comparison with time measurement
         try:
             # Mesure du temps pour Black-Scholes
@@ -144,7 +178,9 @@ def api_calculate():
         
         return jsonify({
             'success': True,
-            'data': data
+            'data': data,
+            'price': data["tree_params"]["final_price"],
+            'greeks': greeks_data
         })
         
     except Exception as e:

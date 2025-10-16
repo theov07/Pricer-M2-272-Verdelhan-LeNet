@@ -114,9 +114,10 @@ async function handleFormSubmit(event) {
             console.log("✅ Données reçues:", result.data);
             console.log("📊 Nombre de noeuds:", result.data.nodes.length);
             console.log("🔗 Nombre de liens:", result.data.edges.length);
+            console.log("🔬 Greeks:", result.greeks);
             
             // Nettoyer et afficher les résultats
-            showNewCalculationResult(result.data, formData);
+            showNewCalculationResult(result.data, formData, result.greeks);
             
             // Completely refresh the visualization
             console.log("🔄 Refreshing visualization for N =", formData.N);
@@ -190,7 +191,7 @@ function generateExecutionTimeSection(executionTimes) {
                 </div>
                 
                 <div class="time-cell ratio" style="text-align: center;">
-                    <div style="color: #ffa726; font-weight: bold; margin-bottom: 0.5rem;">
+                    <div style="color: #ffffff; font-weight: bold; margin-bottom: 0.5rem;">
                         📊 Difference
                     </div>
                     <div style="font-size: 1.3rem; color: #ffffff;">
@@ -202,7 +203,93 @@ function generateExecutionTimeSection(executionTimes) {
     `;
 }
 
-function showNewCalculationResult(data, params) {
+function generateGreeksSection(greeks) {
+    console.log("Greeks data received:", greeks);
+    
+    if (!greeks || greeks.delta === undefined) {
+        console.log("Greeks not available or delta undefined");
+        return ''; // Don't show Greeks section if not available
+    }
+    
+    return `
+        <div class="greeks-section" style="margin-top: 2rem;">
+            <center><h4>🔬 Option Greeks (Sensitivities)</h4></center>
+            
+            <div class="greeks-grid" style="
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                gap: 1rem; 
+                margin-top: 1rem;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 10px;
+                padding: 1.5rem;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            ">
+                <div class="greek-item" style="text-align: center;">
+                    <div style="color: #4fc3f7; font-weight: bold; margin-bottom: 0.5rem;">
+                        📈 Delta (∂V/∂S)
+                    </div>
+                    <div style="font-size: 1.2rem; color: #ffffff;">
+                        ${greeks.delta.toFixed(6)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #aaaaaa; margin-top: 0.25rem;">
+                        Price sensitivity
+                    </div>
+                </div>
+                
+                <div class="greek-item" style="text-align: center;">
+                    <div style="color: #66bb6a; font-weight: bold; margin-bottom: 0.5rem;">
+                        📊 Gamma (∂²V/∂S²)
+                    </div>
+                    <div style="font-size: 1.2rem; color: #ffffff;">
+                        ${greeks.gamma.toFixed(8)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #aaaaaa; margin-top: 0.25rem;">
+                        Delta sensitivity
+                    </div>
+                </div>
+                
+                <div class="greek-item" style="text-align: center;">
+                    <div style="color: #ff7043; font-weight: bold; margin-bottom: 0.5rem;">
+                        ⏰ Theta (∂V/∂t)
+                    </div>
+                    <div style="font-size: 1.2rem; color: #ffffff;">
+                        ${greeks.theta.toFixed(6)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #aaaaaa; margin-top: 0.25rem;">
+                        Time decay
+                    </div>
+                </div>
+                
+                <div class="greek-item" style="text-align: center;">
+                    <div style="color: #ab47bc; font-weight: bold; margin-bottom: 0.5rem;">
+                        🌊 Vega (∂V/∂σ)
+                    </div>
+                    <div style="font-size: 1.2rem; color: #ffffff;">
+                        ${greeks.vega.toFixed(6)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #aaaaaa; margin-top: 0.25rem;">
+                        Volatility sensitivity
+                    </div>
+                </div>
+                
+                <div class="greek-item" style="text-align: center;">
+                    <div style="color: #ffa726; font-weight: bold; margin-bottom: 0.5rem;">
+                        💰 Rho (∂V/∂r)
+                    </div>
+                    <div style="font-size: 1.2rem; color: #ffffff;">
+                        ${greeks.rho.toFixed(6)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #aaaaaa; margin-top: 0.25rem;">
+                        Interest rate sensitivity
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function showNewCalculationResult(data, params, greeks) {
     // Cacher l'ancien système
     document.getElementById('result').style.display = 'none';
     
@@ -243,6 +330,7 @@ function showNewCalculationResult(data, params) {
         </div>
         
         ${generateExecutionTimeSection(data.execution_times)}
+        ${generateGreeksSection(greeks)}
     `;
     
     // Section détaillée
