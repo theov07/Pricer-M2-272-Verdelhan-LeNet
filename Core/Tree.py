@@ -13,6 +13,7 @@ class Tree:
         self.nodes_by_step = []                     # Liste des nœuds par étape pour recombinaison
     
 
+
     def build_tree(self, threshold=0):
         
         trunc = self.root = Node(self.market.S0, 0, self)
@@ -68,12 +69,16 @@ class Tree:
     
     def build_next_step(self, current_step):
         """
-        Construit tous les nœuds de l'étape suivante avec recombinaison.
+        Construit tous les nœuds de l'étape suivante avec recombinaison et pruning.
         """
         next_step = current_step + 1
         next_nodes = []
         
         for node in self.nodes_by_step[current_step]:
+            # Appliquer le pruning : ignorer les nœuds dont la probabilité cumulée est trop faible
+            if hasattr(node, 'cum_prob') and node.cum_prob < self.threshold:
+                continue  # Skip ce nœud (pruning)
+                
             # Calculer les valeurs des 3 nœuds suivants
             alpha = node.get_alpha()
             
@@ -101,7 +106,7 @@ class Tree:
             up_node.down_neighbor = mid_node
             down_node.up_neighbor = mid_node
             
-            # Calcul des probabilités
+            # Calcul des probabilités AVANT d'appliquer le pruning final
             node.compute_probabilities()
         
         # Trier les nœuds par valeur décroissante

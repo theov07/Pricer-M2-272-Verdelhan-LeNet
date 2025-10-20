@@ -71,17 +71,23 @@ class Node:
         self.prob_mid = p_mid
         self.prob_down = p_down
 
-        # Mise à jour des probabilités cumulées
+        # Mise à jour des probabilités cumulées vers les nœuds suivants
         if not hasattr(self, "cum_prob"):
-            self.cum_prob = 1.0
+            self.cum_prob = 1.0  # Par défaut pour la racine
 
         if getattr(self, "forward_up_neighbor", None) is not None:
+            if not hasattr(self.forward_up_neighbor, "cum_prob"):
+                self.forward_up_neighbor.cum_prob = 0.0
             self.forward_up_neighbor.cum_prob += self.cum_prob * self.prob_forward_up_neighbor
 
         if getattr(self, "forward_mid_neighbor", None) is not None:
+            if not hasattr(self.forward_mid_neighbor, "cum_prob"):
+                self.forward_mid_neighbor.cum_prob = 0.0
             self.forward_mid_neighbor.cum_prob += self.cum_prob * self.prob_forward_mid_neighbor
 
         if getattr(self, "forward_down_neighbor", None) is not None:
+            if not hasattr(self.forward_down_neighbor, "cum_prob"):
+                self.forward_down_neighbor.cum_prob = 0.0
             self.forward_down_neighbor.cum_prob += self.cum_prob * self.prob_forward_down_neighbor
 
 
