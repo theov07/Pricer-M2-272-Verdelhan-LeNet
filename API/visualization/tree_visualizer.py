@@ -12,8 +12,8 @@ class TreeVisualizer:
     def __init__(self):
         pass
     
-    def create_tree_data(self, S0, K, T, r, sigma, N, option_type='call', option_style='european', dividend=0.0, ex_div_date=None):
-        print(f"Creation arbre: S0={S0}, K={K}, T={T}, r={r}, sigma={sigma}, N={N}, dividend={dividend}, ex_div_date={ex_div_date}")
+    def create_tree_data(self, S0, K, T, r, sigma, N, option_type='call', option_style='european', dividend=0.0, threshold=0.0, ex_div_date=None):
+        print(f"Creation arbre: S0={S0}, K={K}, T={T}, r={r}, sigma={sigma}, N={N}, dividend={dividend}, threshold={threshold}, ex_div_date={ex_div_date}")
         
         market = Market(S0=S0, rate=r, sigma=sigma, dividend=dividend, ex_div_date=ex_div_date)
         
@@ -22,7 +22,7 @@ class TreeVisualizer:
         else:
             option = Option(T=T, K=K, opt_type='put', style=option_style)
         
-        tree = Tree(market=market, option=option, N=N)
+        tree = Tree(market=market, option=option, N=N, threshold=threshold)
         option_price = tree.get_option_price()
         
         nodes_data = []

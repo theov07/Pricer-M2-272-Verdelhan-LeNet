@@ -20,7 +20,7 @@ def api_calculate():
         
         # Validation des paramètres requis
         required_params = ['S0', 'K', 'start_date', 'maturity_date', 'r', 'sigma', 'N']
-        optional_params = ['option_type', 'option_style', 'dividend', 'ex_div_date']
+        optional_params = ['option_type', 'option_style', 'dividend', 'threshold', 'ex_div_date']
         
         # Vérifier les paramètres requis
         for param in required_params:
@@ -34,6 +34,7 @@ def api_calculate():
         option_type = params.get('option_type', 'call')
         option_style = params.get('option_style', 'european')
         dividend = params.get('dividend', 0.0)
+        threshold = params.get('threshold', 0.0)
         ex_div_date = params.get('ex_div_date', None)
         
         # Validation des valeurs optionnelles
@@ -91,6 +92,7 @@ def api_calculate():
             option_type=option_type,
             option_style=option_style,
             dividend=dividend,
+            threshold=threshold,
             ex_div_date=ex_div_date_obj
         )
         trinomial_end_time = time.time()

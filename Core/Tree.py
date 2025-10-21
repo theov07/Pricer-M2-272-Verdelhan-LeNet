@@ -6,10 +6,11 @@ from datetime import datetime
 
 class Tree:
 
-    def __init__(self, market, option, N):
+    def __init__(self, market, option, N, threshold=0.0):
         self.N = N                                  # Nombre d'étapes dans l'arbre
         self.market = market
         self.option = option
+        self.threshold = threshold                  # Seuil de pruning par défaut
         self.nodes_by_step = []                     # Liste des nœuds par étape pour recombinaison
     
 
@@ -182,10 +183,12 @@ class Tree:
 
     
 
-    def get_option_price(self, threshold=0):
+    def get_option_price(self, threshold=None):
         """
         Retourne le prix de l'option à ce nœud.
         """
+        if threshold is None:
+            threshold = self.threshold
         self.build_tree(threshold=threshold)
         return self.calculate_option_price()
     

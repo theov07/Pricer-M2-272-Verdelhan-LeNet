@@ -92,6 +92,7 @@ async function handleFormSubmit(event) {
         option_type: document.querySelector('[data-option].active').dataset.option,
         option_style: document.querySelector('[data-style].active').dataset.style,
         dividend: parseFloat(document.getElementById('dividend').value) || 0,
+        threshold: parseFloat(document.getElementById('threshold').value) || 0,
         ex_div_date: document.getElementById('ex_div_date').value || null
     };
 
@@ -409,6 +410,12 @@ function showNewCalculationResult(data, params, greeks) {
             <div class="detail-item">
                 <div class="detail-label">Dividend</div>
                 <div class="detail-value">${params.dividend}€</div>
+            </div>
+            ` : ''}
+            ${params.threshold > 0 ? `
+            <div class="detail-item">
+                <div class="detail-label">Pruning threshold</div>
+                <div class="detail-value">${(params.threshold * 100).toFixed(1)}%</div>
             </div>
             ` : ''}
             ${params.ex_div_date ? `
