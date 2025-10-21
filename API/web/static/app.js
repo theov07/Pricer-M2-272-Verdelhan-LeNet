@@ -6,6 +6,43 @@ let svg, g;
 const width = 1000;
 const height = 600;
 
+// Fonctions utilitaires pour le calcul des nœuds ignorés
+function calculateTheoreticalNodes(N) {
+    // Dans un arbre trinomial, chaque étape i a (2*i + 1) nœuds
+    // Total de nœuds = somme de i=0 à N de (2*i + 1)
+    let total = 0;
+    for (let i = 0; i <= N; i++) {
+        total += (2 * i + 1);
+    }
+    return total;
+}
+
+function calculateIgnoredNodes(N, actualNodes, fallbackData = null) {
+    const theoreticalNodes = calculateTheoreticalNodes(N);
+    
+    // Si on a des données de fallback, utiliser le nombre de nœuds qui auraient été ignorés avec le threshold original
+    if (fallbackData && fallbackData.fallback_used && fallbackData.nodes_ignored_by_original_threshold) {
+        return fallbackData.nodes_ignored_by_original_threshold;
+    }
+    
+    return Math.max(0, theoreticalNodes - actualNodes);
+}
+
+function calculatePruningPercentage(N, actualNodes, fallbackData = null) {
+    const theoreticalNodes = calculateTheoreticalNodes(N);
+    
+    // Si on a des données de fallback, utiliser le nombre de nœuds qui auraient été ignorés avec le threshold original
+    if (fallbackData && fallbackData.fallback_used && fallbackData.nodes_ignored_by_original_threshold) {
+        const ignored = fallbackData.nodes_ignored_by_original_threshold;
+        const percentage = (ignored / theoreticalNodes) * 100;
+        return Math.max(0, percentage).toFixed(1);
+    }
+    
+    const ignored = theoreticalNodes - actualNodes;
+    const percentage = (ignored / theoreticalNodes) * 100;
+    return Math.max(0, percentage).toFixed(1);
+}
+
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
     initializeToggleButtons();
@@ -92,7 +129,7 @@ async function handleFormSubmit(event) {
         option_type: document.querySelector('[data-option].active').dataset.option,
         option_style: document.querySelector('[data-style].active').dataset.style,
         dividend: parseFloat(document.getElementById('dividend').value) || 0,
-        threshold: parseFloat(document.getElementById('threshold').value) || 0,
+        threshold: (parseFloat(document.getElementById('threshold').value) || 0) / 100, // Convertir % en fraction
         ex_div_date: document.getElementById('ex_div_date').value || null
     };
 
@@ -116,6 +153,18 @@ async function handleFormSubmit(event) {
             console.log("📊 Nombre de noeuds:", result.data.nodes.length);
             console.log("🔗 Nombre de liens:", result.data.edges.length);
             console.log("🔬 Greeks:", result.greeks);
+            
+            // Afficher l'avertissement si présent
+            if (result.warning) {
+                console.log("⚠️ Avertissement:", result.warning);
+                showWarning(result.warning);
+            }
+            
+            // Afficher l'avertissement de fallback si présent
+            if (result.data.fallback_used && result.data.warning_message) {
+                console.log("⚠️ Fallback utilisé:", result.data.warning_message);
+                showWarning(result.data.warning_message);
+            }
             
             // Nettoyer et afficher les résultats
             showNewCalculationResult(result.data, formData, result.greeks);
@@ -142,6 +191,55 @@ function showResult(message, type) {
     resultDiv.innerHTML = message;
     resultDiv.className = `result ${type}`;
     resultDiv.style.display = 'block';
+}
+
+function showWarning(message) {
+    // Créer ou mettre à jour une div d'avertissement
+    let warningDiv = document.getElementById('warning-message');
+    if (!warningDiv) {
+        warningDiv = document.createElement('div');
+        warningDiv.id = 'warning-message';
+        warningDiv.style.cssText = `
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #ffc107;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        `;
+        
+        // Insérer avant la section des résultats
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection.parentNode) {
+            resultsSection.parentNode.insertBefore(warningDiv, resultsSection);
+        }
+    }
+    
+    warningDiv.innerHTML = `
+        <span style="font-size: 1.2rem;">⚠️</span>
+        <span>${message}</span>
+        <button onclick="this.parentElement.style.display='none'" style="
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: #ffc107;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+        ">×</button>
+    `;
+    warningDiv.style.display = 'flex';
+    
+    // Auto-hide après 10 secondes
+    setTimeout(() => {
+        if (warningDiv && warningDiv.style.display !== 'none') {
+            warningDiv.style.display = 'none';
+        }
+    }, 10000);
 }
 
 function generateExecutionTimeSection(executionTimes) {
@@ -402,6 +500,12 @@ function showNewCalculationResult(data, params, greeks) {
                 <div class="detail-label">Nodes calculated</div>
                 <div class="detail-value">${data.nodes.length}</div>
             </div>
+            ${params.threshold > 0 ? `
+            <div class="detail-item">
+                <div class="detail-label">Nodes ignored (pruning)</div>
+                <div class="detail-value">${calculateIgnoredNodes(params.N, data.nodes.length, data)} (-${calculatePruningPercentage(params.N, data.nodes.length, data)}%)</div>
+            </div>
+            ` : ''}
             <div class="detail-item">
                 <div class="detail-label">Period (days)</div>
                 <div class="detail-value">${dateInfo.T_days}</div>
@@ -415,7 +519,7 @@ function showNewCalculationResult(data, params, greeks) {
             ${params.threshold > 0 ? `
             <div class="detail-item">
                 <div class="detail-label">Pruning threshold</div>
-                <div class="detail-value">${(params.threshold * 100).toFixed(1)}%</div>
+                <div class="detail-value">${(params.threshold * 100).toFixed(20)}%</div>
             </div>
             ` : ''}
             ${params.ex_div_date ? `

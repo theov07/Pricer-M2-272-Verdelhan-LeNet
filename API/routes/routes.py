@@ -77,6 +77,16 @@ def api_calculate():
         if params['K'] <= 0:
             return jsonify({'success': False, 'error': 'Le strike K doit être positif'}), 400
         
+        # Validation de la combinaison threshold/N pour avertir du pruning excessif
+        warning_message = None
+        if threshold > 0:
+            if params['N'] > 100 and threshold > 0.05:
+                warning_message = f'⚠️ Attention: N={params["N"]} avec threshold={threshold} peut être instable. Recommandé: threshold ≤ 0.05'
+            elif params['N'] > 50 and threshold > 0.1:
+                warning_message = f'⚠️ Attention: N={params["N"]} avec threshold={threshold} peut éliminer trop de nœuds. Recommandé: threshold ≤ 0.1'
+            elif params['N'] > 20 and threshold > 0.2:
+                warning_message = f'⚠️ Attention: N={params["N"]} avec threshold={threshold} peut être agressif. Recommandé: threshold ≤ 0.2'
+        
         # Create visualizer and calculate with time measurement
         visualizer = TreeVisualizer()
         
@@ -243,7 +253,8 @@ def api_tree():
             'data': data,
             'trinomial_price': trinomial_price,
             'black_scholes_price': data.get('black_scholes_price'),
-            'difference': trinomial_price - data.get('black_scholes_price', 0) if data.get('black_scholes_price') else None
+            'difference': trinomial_price - data.get('black_scholes_price', 0) if data.get('black_scholes_price') else None,
+            'warning': warning_message
         })
         
     except Exception as e:

@@ -23,7 +23,45 @@ class TreeVisualizer:
             option = Option(T=T, K=K, opt_type='put', style=option_style)
         
         tree = Tree(market=market, option=option, N=N, threshold=threshold)
-        option_price = tree.get_option_price()
+        original_threshold = threshold  # Garder le threshold original pour les statistiques
+        fallback_used = False
+        warning_message = None
+        
+        try:
+            option_price = tree.get_option_price()
+            
+            if option_price is None:
+                print(f"⚠️ AVERTISSEMENT: Pruning trop agressif avec threshold={threshold}, tentative de fallback avec threshold réduit")
+                # Fallback: réduire le threshold automatiquement
+                fallback_threshold = max(0.0, threshold * 0.5)
+                tree_fallback = Tree(market=market, option=option, N=N, threshold=fallback_threshold)
+                option_price = tree_fallback.get_option_price()
+                tree = tree_fallback  # Utiliser l'arbre de fallback
+                fallback_used = True
+                warning_message = f"Pruning avec threshold={original_threshold:.1%} trop agressif, utilisé threshold={fallback_threshold:.1%}"
+                print(f"✅ Fallback réussi avec threshold={fallback_threshold}")
+            
+        except AttributeError as e:
+            if "'NoneType' object has no attribute 'tree'" in str(e):
+                print(f"⚠️ AVERTISSEMENT: Pruning avec threshold={threshold} a échoué, utilisation du fallback sans pruning")
+                # Fallback: arbre sans pruning
+                tree_fallback = Tree(market=market, option=option, N=N, threshold=0.0)
+                option_price = tree_fallback.get_option_price()
+                tree = tree_fallback  # Utiliser l'arbre de fallback
+                fallback_used = True
+                warning_message = f"Pruning avec threshold={original_threshold:.1%} a échoué, utilisé threshold=0.0%"
+                print(f"✅ Fallback réussi sans pruning (threshold=0.0)")
+            else:
+                raise e
+        except Exception as e:
+            print(f"⚠️ ERREUR: {str(e)}, tentative de fallback sans pruning")
+            # Fallback: arbre sans pruning
+            tree_fallback = Tree(market=market, option=option, N=N, threshold=0.0)
+            option_price = tree_fallback.get_option_price()
+            tree = tree_fallback  # Utiliser l'arbre de fallback
+            fallback_used = True
+            warning_message = f"Erreur avec threshold={original_threshold:.1%}, utilisé threshold=0.0%"
+            print(f"✅ Fallback réussi sans pruning (threshold=0.0)")
         
         nodes_data = []
         edges_data = []
@@ -91,10 +129,33 @@ class TreeVisualizer:
             'option_style': option_style
         }
         
+        # Calculer les statistiques de pruning avec le threshold original
+        actual_nodes = len(nodes_data)
+        theoretical_nodes = sum(2 * i + 1 for i in range(N + 1))
+        
+        # Si un fallback a été utilisé, calculer combien de nœuds auraient été ignorés avec le threshold original
+        nodes_ignored_by_original_threshold = 0
+        if fallback_used and original_threshold > 0:
+            # Compter les nœuds qui auraient été ignorés avec le threshold original
+            for step in range(N + 1):
+                if step < len(tree.nodes_by_step):
+                    for node in tree.nodes_by_step[step]:
+                        if hasattr(node, 'cum_prob') and node.cum_prob < original_threshold:
+                            nodes_ignored_by_original_threshold += 1
+        
         print(f"Donnees extraites: {len(nodes_data)} noeuds, {len(edges_data)} liens")
         
-        return {
+        result = {
             'nodes': nodes_data,
             'edges': edges_data,
             'tree_params': tree_params
         }
+        
+        # Ajouter les informations de pruning et de fallback
+        if fallback_used:
+            result['fallback_used'] = True
+            result['original_threshold'] = original_threshold
+            result['warning_message'] = warning_message
+            result['nodes_ignored_by_original_threshold'] = nodes_ignored_by_original_threshold
+        
+        return result
