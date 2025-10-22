@@ -442,7 +442,7 @@ function showNewCalculationResult(data, params, greeks) {
     
         // Section principale - Comparaison des prix
     document.getElementById('main-results').innerHTML = `
-        <h3>💰 Pricing Results</h3>
+        <h3>Pricing Results</h3>
         
         <div class="price-comparison">
             <div class="price-box trinomial">
@@ -506,7 +506,7 @@ function showNewCalculationResult(data, params, greeks) {
     }
     
     document.getElementById('detailed-results').innerHTML = `
-        <h4>🔍 Parameter Details</h4>
+        <h4>Parameters Details</h4>
         <div class="details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
             <div class="detail-item">
                 <div class="detail-label">Option type</div>

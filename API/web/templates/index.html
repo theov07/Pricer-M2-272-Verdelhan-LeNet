@@ -12,7 +12,7 @@
     <div class="container">
         <header class="header">
             <h1>🌳 Pricer Trinomial Pro</h1>
-            <p>Options evaluation using trinomial model - Dauphine M2 - VERDELHAN - LE NET</p>
+            <p>Options pricing using Trinomial Model - Dauphine M2 - VERDELHAN - LE NET</p>
             
             <div style="text-align: center; margin-top: 2rem; margin-bottom: 1rem;">
                 <button onclick="hideVisualizationsTab()" style="
@@ -26,7 +26,7 @@
                     margin-right: 1rem;
                     transition: all 0.3s ease;
                 " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    💰 Pricer
+                    Pricer
                 </button>
                 <button onclick="showVisualizationsTab()" style="
                     background: rgba(255, 255, 255, 0.1);
@@ -38,7 +38,7 @@
                     cursor: pointer;
                     transition: all 0.3s ease;
                 " onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
-                    📊 Visualizations
+                    Visualizations
                 </button>
             </div>
         </header>
@@ -49,7 +49,7 @@
                 <!-- Section de configuration -->
                 <section class="config-section">
                 <div class="card">
-                    <h2>📊 Option Configuration</h2>
+                    <h2>Option Configuration</h2>
                     <form id="pricing-form">
                         <div class="form-grid">
                             <div class="form-group">
@@ -78,7 +78,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="N">Steps (N)</label>
-                                <input type="number" id="N" value="5" min="1" required>
+                                <input type="number" id="N" value="20" min="1" required>
                             </div>
                             <div class="form-group">
                                 <label for="dividend">Dividend (€)</label>
@@ -133,7 +133,7 @@
             <!-- Visualization section -->
             <section id="visualization" class="visualization-section" style="display: none;">
                 <div class="card">
-                    <h2>🌳 Trinomial tree visualization</h2>
+                    <h2>Trinomial Tree Visualization</h2>
                     <div class="tree-area">
                         <svg id="tree-svg"></svg>
                     </div>
@@ -147,25 +147,25 @@
             <!-- Visualizations Tab (hidden by default) -->
             <div id="visualizations-tab" style="display: none;">
                 <div class="card">
-                    <h2>📈 Convergence Analysis</h2>
+                    <h2>Convergence Analysis</h2>
                     <p style="color: #aaa; margin-bottom: 1rem;">Analysis of trinomial model convergence to Black-Scholes theoretical price</p>
                     <div id="convergence-plot" style="width: 100%; height: 500px;"></div>
                 </div>
                 
                 <div class="card" style="margin-top: 2rem;">
-                    <h2>🔢 Node Count Analysis</h2>
+                    <h2>Node Count Analysis</h2>
                     <p style="color: #aaa; margin-bottom: 1rem;">Number of nodes in trinomial tree as function of steps (N)</p>
                     <div id="nodes-plot" style="width: 100%; height: 500px;"></div>
                 </div>
                 
                 <div class="card" style="margin-top: 2rem;">
-                    <h2>🕐 Execution Time Analysis</h2>
+                    <h2>Execution Time Analysis</h2>
                     <p style="color: #aaa; margin-bottom: 1rem;">Execution time vs number of steps (theoretical estimation)</p>
                     <div id="timing-plot" style="width: 100%; height: 500px;"></div>
                 </div>
                 
                 <div class="card" style="margin-top: 2rem;">
-                    <h2>🎯 Precision Analysis</h2>
+                    <h2>Precision Analysis</h2>
                     <p style="color: #aaa; margin-bottom: 1rem;">Absolute error vs number of steps (convergence precision)</p>
                     <div id="precision-plot" style="width: 100%; height: 500px;"></div>
                 </div>

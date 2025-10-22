@@ -19,6 +19,5 @@ def index():
 if __name__ == '__main__':
     print("🚀 Pricer Trinomial Pro - Application")
     print("🌐 Interface web: http://localhost:5001")
-    print("🔗 API: http://localhost:5001/api/calculate")
     
     app.run(host='0.0.0.0', port=5001, debug=True)

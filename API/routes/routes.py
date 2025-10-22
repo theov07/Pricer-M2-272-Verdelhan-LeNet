@@ -272,7 +272,11 @@ def api_convergence():
     """Generate convergence analysis data"""
     try:
         params = request.json
+        
+        # Utiliser toujours la même progression jusqu'à 500
         steps = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500]
+        
+        print(f"📊 Analyse de convergence avec steps fixes: {steps}")
         
         # Import nécessaire
         from Core.Market import Market
