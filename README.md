@@ -1,45 +1,89 @@
-# 🌳 Pricer Trinomial Pro
+# Trinomial Options Pricer
 
-**Options evaluation using trinomial model - Dauphine M2 - VERDELHAN - LE NET**
+**Advanced options pricing application using trinomial tree model with real-time visualization and convergence analysis.**
 
-## 🚀 Demo Live
+*Academic project - Paris Dauphine University - Master 2 in Quantitative Finance*
 
-**👉 [Accéder au Pricer en ligne](https://option-pricer-verdelhan-lenet.up.railway.app)** 
+---
 
-## 📋 Description
+## 🚀 Live Demo
 
-Application web avancée de pricing d'options utilisant le modèle trinomial avec interface interactive et visualisations analytiques.
+**[→ Access the Web Application](https://option-pricer-verdelhan-lenet.up.railway.app)**
 
-### ✨ Fonctionnalités
+Interactive web interface with real-time pricing, Greeks calculation, and advanced visualizations.
 
-- 🎯 **Pricing d'options** Call/Put, Européennes/Américaines
-- 📊 **Visualisations interactives** avec Plotly.js
-- 🌳 **Arbre trinomial** visualisé avec D3.js  
-- 📈 **Analyse de convergence** vers Black-Scholes
-- ⚡ **Interface responsive** et moderne
-- 🔢 **Calcul des Grecs** (Delta, Gamma, Theta, Vega, Rho)
+---
 
-### 🛠️ Technologies
+## 🎯 Features
 
-- **Backend**: Python, Flask, NumPy, SciPy
-- **Frontend**: HTML5, CSS3, JavaScript, D3.js, Plotly.js
-- **Déployement**: Railway.app
+- **Options Pricing**: European & American Call/Put options using trinomial tree model
+- **Greeks Calculation**: Delta, Gamma, Theta, Vega, Rho with numerical precision
+- **Convergence Analysis**: Real-time comparison with Black-Scholes theoretical values
+- **Interactive Visualizations**: 
+  - D3.js trinomial tree representation
+  - Plotly.js convergence charts and sensitivity analysis
+- **Advanced Parameters**: Dividend yields, early exercise conditions, pruning thresholds
 
-## 🏃‍♂️ Installation locale
+---
+
+## 📊 Technical Implementation
+
+### Core Financial Models
+- **Trinomial Tree**: Cox-Ross-Rubinstein extended model with variable time steps
+- **Black-Scholes**: Theoretical benchmark for convergence validation
+- **Greeks Computation**: Finite difference methods with adaptive precision
+- **Risk Management**: Real-time sensitivity analysis and scenario modeling
+
+### Technology Stack
+- **Backend**: Python 3.11, Flask, NumPy, SciPy
+- **Frontend**: JavaScript ES6, D3.js, Plotly.js, HTML5/CSS3
+- **Deployment**: Docker, Railway.app (cloud hosting)
+- **API**: RESTful endpoints with JSON data exchange
+
+---
+
+## 🔬 Usage Options
+
+### Option 1: Web Application (Recommended)
+Access the deployed application directly in your browser:
+1. Visit **[option-pricer-verdelhan-lenet.up.railway.app](https://option-pricer-verdelhan-lenet.up.railway.app)**
+2. Configure option parameters (spot price, strike, volatility, etc.)
+3. Run pricing calculations and explore interactive visualizations
+4. Analyze convergence behavior and Greeks sensitivity
+
+### Option 2: Local API Development
+Clone and run the application locally for development or API integration:
 
 ```bash
+# Clone repository
 git clone https://github.com/theov07/Pricer-M2-272-Verdelhan-LeNet.git
 cd Pricer-M2-272-Verdelhan-LeNet
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Launch application
 python app.py
 ```
 
-## 📚 Usage
-
-1. Configurer les paramètres de l'option
-2. Lancer le calcul de pricing
-3. Explorer les visualisations avancées
-4. Analyser la convergence du modèle
+**API Endpoints:**
+- `POST /api/calculate` - Options pricing with tree visualization data
+- `POST /api/convergence` - Convergence analysis across multiple time steps
+- **Base URL**: `http://localhost:5001`
 
 ---
-*Projet académique - Université Paris Dauphine M2*
+
+## 📈 Academic Context
+
+This project demonstrates practical implementation of advanced financial derivatives pricing models, combining:
+
+- **Mathematical Finance**: Stochastic processes, risk-neutral valuation, numerical methods
+- **Software Engineering**: Clean architecture, API design, real-time data visualization
+- **Quantitative Analysis**: Model validation, convergence studies, sensitivity analysis
+
+*Developed as part of the Master 2 curriculum in Quantitative Finance at Université Paris Dauphine.*
+
+---
+
+**Authors**: VERDELHAN & LE NET  
+**Institution**: Paris Dauphine University - Master 2 Quantitative Finance
