@@ -6,8 +6,6 @@
 
 **👉 [Accéder au Pricer en ligne](https://option-pricer-verdelhan-lenet.up.railway.app)** 
 
-*Note: Cette URL sera active une fois le projet déployé sur Railway*
-
 ## 📋 Description
 
 Application web avancée de pricing d'options utilisant le modèle trinomial avec interface interactive et visualisations analytiques.
