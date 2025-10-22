@@ -1,3 +1,40 @@
+// Fonctions pour basculer entre les onglets
+function showVisualizationsTab() {
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('visualizations-tab').style.display = 'block';
+    
+    // Générer automatiquement tous les graphiques
+    setTimeout(() => {
+        console.log('🚀 Génération automatique des graphiques...');
+        
+        // Toujours générer les 3 autres graphiques
+        createNodesAnalysisChart();
+        createTimingAnalysisChart(); 
+        createPrecisionAnalysisChart();
+        
+        // Pour le graphique de convergence, essayer d'abord avec des données réelles
+        if (currentData) {
+            generateConvergenceAnalysis();
+        } else {
+            // Sinon créer un graphique avec des données de test
+            const testData = [
+                {N: 5, trinomial_price: 10.55, blackscholes_price: 10.45},
+                {N: 10, trinomial_price: 10.48, blackscholes_price: 10.45},
+                {N: 15, trinomial_price: 10.46, blackscholes_price: 10.45},
+                {N: 20, trinomial_price: 10.45, blackscholes_price: 10.45},
+                {N: 25, trinomial_price: 10.45, blackscholes_price: 10.45},
+                {N: 30, trinomial_price: 10.45, blackscholes_price: 10.45}
+            ];
+            createPlotlyConvergenceChart(testData);
+        }
+    }, 100);
+}
+
+function hideVisualizationsTab() {
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('visualizations-tab').style.display = 'none';
+}
+
 // Variables globales
 let currentData = null;
 let svg, g;
@@ -535,15 +572,10 @@ function showNewCalculationResult(data, params, greeks) {
 
 function showVisualization() {
     document.getElementById('visualization').style.display = 'block';
-    document.getElementById('convergence-section').style.display = 'block';
-    
-    // Générer automatiquement l'analyse de convergence
-    generateConvergenceAnalysis();
 }
 
 function hideVisualization() {
     document.getElementById('visualization').style.display = 'none';
-    document.getElementById('convergence-section').style.display = 'none';
 }
 
 function refreshVisualization() {
