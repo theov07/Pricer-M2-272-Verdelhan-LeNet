@@ -633,25 +633,23 @@ function drawTree(data) {
     
     console.log(`📐 Dimensions du container: ${width}x${height}`);
     
-    // Paramètres adaptatifs selon N pour gérer jusqu'à N=400+
+    // Adaptive parameters to handle visualization up to N=50
     const N = data.tree_params.N;
     let adaptiveScale, showVisualization = true;
     
     if (N <= 10) {
-        adaptiveScale = 1.0;           // Taille normale
+        adaptiveScale = 1.0;           // Normal size
     } else if (N <= 50) {
-        adaptiveScale = Math.max(0.4, 10 / N);  // Réduit progressivement
-    } else if (N <= 200) {
-        adaptiveScale = 0.2;           // Très petit
-        showVisualization = data.nodes.length < 5000; // Limite par nombre de nœuds
+        adaptiveScale = Math.max(0.4, 10 / N);  // Progressive reduction
+        showVisualization = true;
     } else {
-        adaptiveScale = 0.1;           // Minimal
-        showVisualization = data.nodes.length < 2000; // Limite stricte
+        // No visualization for N > 50
+        showVisualization = false;
     }
     
-    console.log(`N=${N}, nœuds=${data.nodes.length}, échelle=${adaptiveScale}, affichage=${showVisualization}`);
+    console.log(`N=${N}, nodes=${data.nodes.length}, scale=${adaptiveScale}, display=${showVisualization}`);
     
-    // Si trop de nœuds, afficher un message informatif au lieu de la visualisation
+    // If too many nodes, display informative message instead of visualization
     if (!showVisualization) {
         g.selectAll("*").remove();
         g.append("text")
@@ -661,7 +659,7 @@ function drawTree(data) {
             .style("font-family", "'Segoe UI', sans-serif")
             .style("font-size", "16px")
             .style("fill", "#ffffff")
-            .text(`Arbre trop volumineux pour la visualisation (${data.nodes.length} nœuds)`);
+            .text(`N > 50, Tree too large for visualization (${data.nodes.length} nodes)`);
         
         g.append("text")
             .attr("x", width/2)
@@ -670,7 +668,7 @@ function drawTree(data) {
             .style("font-family", "'Segoe UI', sans-serif")
             .style("font-size", "14px")
             .style("fill", "#cccccc")
-            .text(`Les calculs sont corrects, seule la visualisation est simplifiée`);
+            .text(`Calculations are correct, only visualization is simplified`);
         return;
     }
     

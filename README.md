@@ -2,7 +2,7 @@
 
 **Advanced options pricing application using trinomial tree model with real-time visualization and convergence analysis.**
 
-*Academic project - Paris Dauphine University - Master 2 in Quantitative Finance*
+*Academic project - Paris Dauphine University - Master 2 in Financial Engineering - Major in Quantitative Finance*
 
 ---
 
@@ -71,19 +71,8 @@ python app.py
 - `POST /api/convergence` - Convergence analysis across multiple time steps
 - **Base URL**: `http://localhost:5001`
 
----
-
-## 📈 Academic Context
-
-This project demonstrates practical implementation of advanced financial derivatives pricing models, combining:
-
-- **Mathematical Finance**: Stochastic processes, risk-neutral valuation, numerical methods
-- **Software Engineering**: Clean architecture, API design, real-time data visualization
-- **Quantitative Analysis**: Model validation, convergence studies, sensitivity analysis
-
-*Developed as part of the Master 2 curriculum in Quantitative Finance at Université Paris Dauphine.*
 
 ---
 
-**Authors**: VERDELHAN & LE NET  
-**Institution**: Paris Dauphine University - Master 2 Quantitative Finance
+**Authors**: VERDELHAN Théo & LE NET Arthur  
+**Institution**: Paris Dauphine University - Master 2 in Financial Engineering - Major in Quantitative Finance
