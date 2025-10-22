@@ -7,6 +7,9 @@ from datetime import datetime
 class Tree:
 
     def __init__(self, market, option, N, threshold=0.0):
+        """
+        Initialise l'arbre trinomial avec recombinaison et pruning.
+        """
         self.N = N                                  # Nombre d'étapes dans l'arbre
         self.market = market
         self.option = option
@@ -16,6 +19,9 @@ class Tree:
 
 
     def build_tree(self, threshold=0):
+        """
+        Construit l'arbre trinomial avec recombinaison et pruning.
+        """
         
         trunc = self.root = Node(self.market.S0, 0, self)
 
@@ -28,9 +34,20 @@ class Tree:
         self.root.cum_prob = 1.0
         self.threshold = threshold
         
-        if self.market.ex_div_date is not None:
-            normalization_div_date = (self.market.ex_div_date - datetime.today()).days / 365
-            self.dividend_step = math.ceil((normalization_div_date / self.option.T) * self.N)
+        if self.market.ex_div_date is not None and self.market.dividend is not None:
+            # Calculer la position relative de la date ex-dividende
+            if self.option.start_date is not None and self.option.end_date is not None:
+                days_to_ex_div = (self.market.ex_div_date - self.option.start_date).days
+                days_to_maturity = (self.option.end_date - self.option.start_date).days
+                relative_time = days_to_ex_div / days_to_maturity
+            else:
+                # Mode avec T directement (on assume que start_date = aujourd'hui)
+                today = datetime.today()
+                days_to_ex_div = (self.market.ex_div_date - today).days
+                days_to_maturity = self.option.T * 365
+                relative_time = days_to_ex_div / days_to_maturity
+            
+            self.dividend_step = math.ceil(relative_time * self.N)
         
         else:
             self.dividend_step = None               # No dividend step if ex_div_date is not set
@@ -38,6 +55,10 @@ class Tree:
         # Construction étape par étape avec vraie recombinaison
         for step in range(self.N):
             self.build_next_step(step)
+        
+        # Appliquer le dividende après construction complète
+        if self.dividend_step is not None and self.market.dividend is not None:
+            self.apply_dividend_to_step(self.dividend_step)
             
         self.last_trunc = self.nodes_by_step[-1][0] if self.nodes_by_step[-1] else None
     
@@ -83,11 +104,12 @@ class Tree:
             # Calculer les valeurs des 3 nœuds suivants
             alpha = node.get_alpha()
             
+            # Calculer les valeurs basées sur le drift normal
             mid_value = node.value * math.exp(self.market.rate * self.deltaT)
             up_value = mid_value * alpha
             down_value = mid_value / alpha
             
-            # Créer ou réutiliser les nœuds
+            # Créer ou réutiliser les nœuds avec les valeurs ajustées
             up_node = self.find_or_create_node(up_value, next_step, next_nodes)
             mid_node = self.find_or_create_node(mid_value, next_step, next_nodes)
             down_node = self.find_or_create_node(down_value, next_step, next_nodes)
@@ -133,6 +155,9 @@ class Tree:
     
 
     def compute_payoff(self):
+        """
+        Calcule le payoff aux nœuds finaux de l'arbre.
+        """
         
         last_node = trunc = self.last_trunc
         trunc.option_price = trunc.tree.option.payoff(last_node.value)
@@ -155,7 +180,6 @@ class Tree:
         """
         Effectue la rétropropagation des prix des options à travers l'arbre.
         """
-        # Backward induction depuis la dernière étape
         for step in range(self.N - 1, -1, -1):
             for node in self.nodes_by_step[step]:
                 node.calculate_option_price(self.market.rate, self.deltaT)
@@ -180,6 +204,7 @@ class Tree:
         if step < len(self.nodes_by_step) and self.market.dividend is not None:
             for node in self.nodes_by_step[step]:
                 node.value -= self.market.dividend
+                
 
     
 

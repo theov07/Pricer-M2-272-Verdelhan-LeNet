@@ -18,20 +18,28 @@ class Option:
         self.type = opt_type
         self.style = style
         
-        # Calcul de T selon les paramètres fournis
         if T is not None:
             self.T = T
+            self.start_date = None
+            self.end_date = None
+        
         elif start_date is not None and maturity_date is not None:
-            # Convertir les dates et calculer T
-            start = datetime.strptime(start_date, '%Y-%m-%d')
-            maturity = datetime.strptime(maturity_date, '%Y-%m-%d')
-            self.T = (maturity - start).days / 365.0
+            self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            self.end_date = datetime.strptime(maturity_date, '%Y-%m-%d')
+            self.T = (self.end_date - self.start_date).days / 365.0
+        
         else:
             raise ValueError("Soit T, soit start_date et maturity_date doivent être fournis")
 
     
     def payoff(self, S: float) -> float:
-        """Calcule le payoff au noeud final"""
+        """
+        Calcule le payoff au noeud final
+        Args:
+            S: Prix du sous-jacent au noeud final
+        Returns:
+            float: Payoff de l'option
+        """
         if self.type == "call":
             return max(S - self.K, 0)
         elif self.type == "put":
