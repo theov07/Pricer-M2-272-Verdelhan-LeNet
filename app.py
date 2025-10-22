@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 from API.routes.routes import api_bp
+import os
 
 
 app = Flask(__name__, 
@@ -17,7 +18,13 @@ def index():
 
 
 if __name__ == '__main__':
-    print("🚀 Pricer Trinomial Pro - Application")
-    print("🌐 Interface web: http://localhost:5001")
+    # Port pour Railway (variable d'environnement PORT)
+    port = int(os.environ.get('PORT', 5001))
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    print("🚀 Pricer Trinomial Pro - Application")
+    print(f"🌐 Interface web: http://0.0.0.0:{port}")
+    
+    # Mode debug désactivé en production
+    debug_mode = os.environ.get('ENVIRONMENT', 'development') == 'development'
+    
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
