@@ -1,6 +1,7 @@
 from datetime import datetime
 
 class Option:
+
     def __init__(self, K: float, opt_type: str = "call", style: str = "european", 
                  T: float = None, start_date: str = None, maturity_date: str = None):
         """
@@ -31,12 +32,15 @@ class Option:
         else:
             raise ValueError("Soit T, soit start_date et maturity_date doivent être fournis")
 
+
     
     def payoff(self, S: float) -> float:
         """
         Calcule le payoff au noeud final
+        
         Args:
             S: Prix du sous-jacent au noeud final
+        
         Returns:
             float: Payoff de l'option
         """

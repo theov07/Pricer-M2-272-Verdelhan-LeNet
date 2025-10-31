@@ -9,21 +9,31 @@ class Tree:
     def __init__(self, market, option, N, threshold=0.0):
         """
         Initialise l'arbre trinomial avec recombinaison et pruning.
+
+        Args:
+            market: Instance de la classe Market contenant les paramètres du marché.
+            option: Instance de la classe Option contenant les paramètres de l'option.
+            N: Nombre d'étapes dans l'arbre.
+            threshold: Seuil de probabilité cumulée pour le pruning des nœuds.
         """
-        self.N = N                                  # Nombre d'étapes dans l'arbre
+        
+        self.N = N                                  
         self.market = market
         self.option = option
-        self.threshold = threshold                  # Seuil de pruning par défaut
-        self.nodes_by_step = []                     # Liste des nœuds par étape pour recombinaison
+        self.threshold = threshold
+        self.nodes_by_step = []
     
 
 
     def build_tree(self, threshold=0):
         """
         Construit l'arbre trinomial avec recombinaison et pruning.
+
+        Args:
+            threshold: Seuil de probabilité cumulée pour le pruning des nœuds.
         """
         
-        trunc = self.root = Node(self.market.S0, 0, self)
+        self.root = Node(self.market.S0, 0, self)
 
         self.deltaT = float(self.option.T) / float(self.N)
         
@@ -68,7 +78,13 @@ class Tree:
         """
         Recherche un nœud existant avec une valeur donnée à une étape donnée.
         Utilise le registre nodes_by_step pour éviter les cycles.
+
+        Args:
+            target_value: La valeur de l'actif sous-jacent à rechercher.
+            step: L'étape de l'arbre où chercher le nœud.
+            tolerance: La tolérance pour la comparaison des valeurs.
         """
+
         if step >= len(self.nodes_by_step):
             return None
             
@@ -82,7 +98,12 @@ class Tree:
     def add_node_to_step(self, node, step):
         """
         Ajoute un nœud au registre de l'étape correspondante.
+
+        Args:
+            node: Le nœud à ajouter.
+            step: L'étape de l'arbre où ajouter le nœud.
         """
+
         if step < len(self.nodes_by_step):
             if node not in self.nodes_by_step[step]:
                 self.nodes_by_step[step].append(node)
@@ -92,7 +113,11 @@ class Tree:
     def build_next_step(self, current_step):
         """
         Construit tous les nœuds de l'étape suivante avec recombinaison et pruning.
+
+        Args:
+            current_step: L'étape actuelle de l'arbre.
         """
+
         next_step = current_step + 1
         next_nodes = []
         
@@ -141,7 +166,17 @@ class Tree:
     def find_or_create_node(self, target_value, step, nodes_list, tolerance=1e-8):
         """
         Trouve un nœud existant avec la valeur donnée ou en crée un nouveau.
+
+        Args:
+            target_value: La valeur de l'actif sous-jacent du nœud.
+            step: L'étape de l'arbre où le nœud doit se trouver.
+            nodes_list: La liste des nœuds déjà créés à cette étape.
+            tolerance: La tolérance pour la comparaison des valeurs.
+
+        Returns:
+            Le nœud existant ou le nouveau nœud créé.
         """
+
         # Chercher dans les nœuds déjà créés pour cette étape
         for node in nodes_list:
             if abs(node.value - target_value) < tolerance:
@@ -157,6 +192,9 @@ class Tree:
     def compute_payoff(self):
         """
         Calcule le payoff aux nœuds finaux de l'arbre.
+
+        Returns:
+            Le nœud de troncature final.
         """
         
         last_node = trunc = self.last_trunc
@@ -180,6 +218,7 @@ class Tree:
         """
         Effectue la rétropropagation des prix des options à travers l'arbre.
         """
+
         for step in range(self.N - 1, -1, -1):
             for node in self.nodes_by_step[step]:
                 node.calculate_option_price(self.market.rate, self.deltaT)
@@ -189,7 +228,11 @@ class Tree:
     def calculate_option_price(self):
         """
         Calcule le prix de l'option en utilisant l'arbre construit.
+
+        Returns:
+            Le prix de l'option au nœud racine.
         """
+
         self.compute_payoff()
         self.backpropagation()
         return self.root.option_price
@@ -201,6 +244,7 @@ class Tree:
         Applique le dividende à tous les nœuds d'un step donné.
         Cette méthode est appelée APRÈS la recombinaison pour éviter de casser les connexions.
         """
+
         if step < len(self.nodes_by_step) and self.market.dividend is not None:
             for node in self.nodes_by_step[step]:
                 node.value -= self.market.dividend
@@ -211,7 +255,14 @@ class Tree:
     def get_option_price(self, threshold=None):
         """
         Retourne le prix de l'option à ce nœud.
+
+        Args:
+            threshold: Seuil de probabilité cumulée pour le pruning des nœuds.
+        
+        Returns:
+            Le prix de l'option au nœud racine.
         """
+
         if threshold is None:
             threshold = self.threshold
         self.build_tree(threshold=threshold)
@@ -222,7 +273,12 @@ class Tree:
     def get_node_count(self):
         """
         Retourne le nombre total de nœuds dans l'arbre.
+
+        Returns:
+            Le nombre total de nœuds.
         """
+
+
         count = 0
         node = self.root
         while node is not None:

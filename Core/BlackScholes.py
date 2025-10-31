@@ -26,6 +26,8 @@ class BlackScholes:
         # Calcul des paramètres d1 et d2
         self._calculate_d_parameters()
     
+
+
     def _calculate_d_parameters(self):
         """Calcule les paramètres d1 et d2 utilisés dans les formules Black-Scholes"""
         if self.T <= 0:
@@ -35,6 +37,8 @@ class BlackScholes:
             self.d1 = (math.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * math.sqrt(self.T))
             self.d2 = self.d1 - self.sigma * math.sqrt(self.T)
     
+
+
     def call_price(self):
         """
         Calcule le prix d'un call européen
@@ -47,6 +51,8 @@ class BlackScholes:
         
         call_price = self.S * norm.cdf(self.d1) - self.K * math.exp(-self.r * self.T) * norm.cdf(self.d2)
         return call_price
+    
+
     
     def put_price(self):
         """
@@ -61,6 +67,8 @@ class BlackScholes:
         put_price = self.K * math.exp(-self.r * self.T) * norm.cdf(-self.d2) - self.S * norm.cdf(-self.d1)
         return put_price
     
+
+
     def price(self, option_type='call'):
         """
         Calcule le prix de l'option selon son type
@@ -78,6 +86,8 @@ class BlackScholes:
         else:
             raise ValueError("option_type doit être 'call' ou 'put'")
     
+
+
     def delta(self, option_type='call'):
         """
         Calcule le delta de l'option (sensibilité au prix du sous-jacent)
@@ -101,6 +111,8 @@ class BlackScholes:
         else:
             raise ValueError("option_type doit être 'call' ou 'put'")
     
+
+
     def gamma(self):
         """
         Calcule le gamma de l'option (sensibilité du delta)
@@ -113,6 +125,8 @@ class BlackScholes:
         
         return norm.pdf(self.d1) / (self.S * self.sigma * math.sqrt(self.T))
     
+
+
     def theta(self, option_type='call'):
         """
         Calcule le theta de l'option (sensibilité au temps)
@@ -137,6 +151,8 @@ class BlackScholes:
         else:
             raise ValueError("option_type doit être 'call' ou 'put'")
     
+
+
     def vega(self):
         """
         Calcule le vega de l'option (sensibilité à la volatilité)
@@ -149,6 +165,8 @@ class BlackScholes:
         
         return self.S * norm.pdf(self.d1) * math.sqrt(self.T)
     
+
+
     def rho(self, option_type='call'):
         """
         Calcule le rho de l'option (sensibilité au taux sans risque)
@@ -168,6 +186,8 @@ class BlackScholes:
             return -self.K * self.T * math.exp(-self.r * self.T) * norm.cdf(-self.d2)
         else:
             raise ValueError("option_type doit être 'call' ou 'put'")
+    
+
     
     def get_greeks(self, option_type='call'):
         """
