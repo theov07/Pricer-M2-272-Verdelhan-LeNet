@@ -15,6 +15,7 @@ class Option:
             start_date: Date de début au format YYYY-MM-DD
             maturity_date: Date de maturité au format YYYY-MM-DD
         """
+
         self.K = K
         self.type = opt_type
         self.style = style
@@ -44,6 +45,7 @@ class Option:
         Returns:
             float: Payoff de l'option
         """
+        
         if self.type == "call":
             return max(S - self.K, 0)
         elif self.type == "put":

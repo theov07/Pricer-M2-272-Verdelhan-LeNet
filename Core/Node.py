@@ -3,7 +3,15 @@ import math
 class Node:
 
     def __init__(self, value, step, tree):
-       
+        """
+        Initialise un nœud dans l'arbre trinomial.
+
+        Args:
+            value: La valeur du nœud.
+            step: L'étape à laquelle se trouve le nœud.
+            tree: L'arbre auquel appartient le nœud.
+        """
+
         self.value = value
         self.tree = tree
         self.step = step

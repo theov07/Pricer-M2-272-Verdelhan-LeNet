@@ -60,7 +60,7 @@ class Tree:
             self.dividend_step = math.ceil(relative_time * self.N)
         
         else:
-            self.dividend_step = None               # No dividend step if ex_div_date is not set
+            self.dividend_step = None   # No dividend step if ex_div_date is not set
         
         # Construction étape par étape avec vraie recombinaison
         for step in range(self.N):

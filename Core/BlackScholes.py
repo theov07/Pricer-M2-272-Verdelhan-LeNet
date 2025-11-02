@@ -29,7 +29,9 @@ class BlackScholes:
 
 
     def _calculate_d_parameters(self):
-        """Calcule les paramètres d1 et d2 utilisés dans les formules Black-Scholes"""
+        """
+        Calcule les paramètres d1 et d2 utilisés dans les formules Black-Scholes
+        """
         if self.T <= 0:
             self.d1 = float('inf') if self.S > self.K else float('-inf')
             self.d2 = self.d1
